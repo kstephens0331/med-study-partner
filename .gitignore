@@ -9,6 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+node_modules/@next/swc-win32-x64-msvc/next-swc.win32-x64-msvc.node
 
 # testing
 /coverage
@@ -39,3 +40,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

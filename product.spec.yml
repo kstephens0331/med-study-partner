@@ -1,0 +1,64 @@
+﻿name: Med Study Partner
+version: 0.9-beta
+stack:
+  frontend: nextjs-app-router
+  serverless: vercel
+  db: supabase
+  long_services:
+    - railway: transcriber
+    - railway: ingestor
+ai:
+  provider: together.ai
+  model: meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo
+env:
+  - NEXT_PUBLIC_SUPABASE_URL
+  - NEXT_PUBLIC_SUPABASE_ANON_KEY
+  - SUPABASE_SERVICE_ROLE
+  - TOGETHER_API_KEY
+  - TOGETHER_MODEL
+  - TRANSCRIBE_URL
+  - INGESTOR_URL
+  - NEXT_PUBLIC_BASE_URL
+api:
+  routes:
+    - POST /api/blocks/current
+    - POST /api/lecture/upload
+    - POST /api/lecture/summarize
+    - POST /api/lecture/report
+    - POST /api/vignettes/batch
+    - POST /api/directqs/batch
+    - POST /api/material/upload
+    - POST /api/material/generate
+    - POST /api/srs/bootstrap
+    - POST /api/srs/next
+    - POST /api/srs/review
+    - POST /api/coach/next
+    - POST /api/coach/answer
+db:
+  rls: owner_only
+  tables:
+    - blocks
+    - lectures
+    - lecture_packs
+    - materials
+    - material_packs
+    - cards
+    - reviews
+    - mastery
+    - sessions
+    - attempts
+pipelines:
+  lecture:
+    - upload->transcribe(Railway)
+    - summarize(map/reduce)->pack+report
+    - batch_generate(vignettes/direct) to >=100 each
+    - seed_srs(cards)
+  material:
+    - upload->extract(Railway)
+    - batch_generate(cloze/direct + vignettes optional)
+    - seed_srs(cards)
+beta_criteria:
+  - pack & report generated for >2h lecture
+  - >=100 vignettes + >=100 direct-ask per source
+  - srs review flow functional
+  - coach adaptivity within block
