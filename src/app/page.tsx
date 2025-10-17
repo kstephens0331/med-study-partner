@@ -1,12 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { weakest, bump } from "@/lib/ai/skillMap";
+import { useRouter } from "next/navigation";
+import { weakestSync as weakest, bump, preloadSkills } from "@/lib/ai/skillMap";
+import { createClient } from "@/lib/supabaseClient";
+import SRSDeck from "./components/SRSDeck";
+import LectureViewer from "./components/LectureViewer";
+import VignetteBank from "./components/VignetteBank";
+import WelcomeModal from "./components/WelcomeModal";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type InterjectStyle = "raise-hand" | "auto";
+type TabType = "coach" | "srs" | "lectures" | "vignettes";
 
 export default function Home() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState<TabType>("coach");
+
   // Quick mode
   const [listening, setListening] = useState(false);
 
@@ -73,6 +86,11 @@ export default function Home() {
     recRef.current = rec;
     return recRef.current;
   };
+
+  // Preload skills on mount
+  useEffect(() => {
+    preloadSkills();
+  }, []);
 
   // Init recognizer (on mount / when lectureOn changes)
   useEffect(() => {
@@ -317,6 +335,13 @@ export default function Home() {
     setDeckContext(data.context || "");
   }
 
+  // ========= Auth =========
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   // ========= UI =========
   const nextPct =
     intervalMs > 0 ? Math.max(0, Math.min(100, 100 - (msUntilInterject / intervalMs) * 100)) : 0;
@@ -333,23 +358,80 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Status chip */}
-          <div
-            className={`rounded-full border px-3 py-1 text-xs ${
-              lectureOn
-                ? "border-emerald-700 bg-emerald-900/20 text-emerald-300"
-                : listening
-                ? "border-rose-700 bg-rose-900/20 text-rose-300"
-                : "border-zinc-700 bg-zinc-900/40 text-zinc-300"
-            }`}
-            title={lectureOn ? "Lecture mode running" : listening ? "Quick capture" : "Idle"}
-          >
-            {lectureOn ? "Lecture On" : listening ? "Recording…" : "Idle"}
+          <div className="flex items-center gap-3">
+            {/* Status chip */}
+            <div
+              className={`rounded-full border px-3 py-1 text-xs ${
+                lectureOn
+                  ? "border-emerald-700 bg-emerald-900/20 text-emerald-300"
+                  : listening
+                  ? "border-rose-700 bg-rose-900/20 text-rose-300"
+                  : "border-zinc-700 bg-zinc-900/40 text-zinc-300"
+              }`}
+              title={lectureOn ? "Lecture mode running" : listening ? "Quick capture" : "Idle"}
+            >
+              {lectureOn ? "Lecture On" : listening ? "Recording…" : "Idle"}
+            </div>
+
+            {/* Logout button */}
+            <button
+              onClick={handleLogout}
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-700"
+            >
+              Logout
+            </button>
           </div>
         </header>
 
-        {/* Upload + Topic Lock */}
-        <section className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+        {/* Tab Navigation */}
+        <nav className="mb-6 flex gap-2 rounded-xl border border-zinc-800 bg-zinc-900/40 p-2">
+          <button
+            onClick={() => setActiveTab("coach")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "coach"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            AI Coach
+          </button>
+          <button
+            onClick={() => setActiveTab("srs")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "srs"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            SRS Review
+          </button>
+          <button
+            onClick={() => setActiveTab("lectures")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "lectures"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Materials
+          </button>
+          <button
+            onClick={() => setActiveTab("vignettes")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "vignettes"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Vignettes
+          </button>
+        </nav>
+
+        {/* Tab Content */}
+        {activeTab === "coach" && (
+          <>
+            {/* Upload + Topic Lock */}
+            <section className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
           <div className="flex flex-wrap items-center gap-3">
             <label className="inline-flex items-center gap-3">
               <input
@@ -554,7 +636,21 @@ export default function Home() {
             ))}
           </div>
         </section>
+          </>
+        )}
+
+        {/* SRS Tab */}
+        {activeTab === "srs" && <SRSDeck />}
+
+        {/* Lectures Tab */}
+        {activeTab === "lectures" && <LectureViewer />}
+
+        {/* Vignettes Tab */}
+        {activeTab === "vignettes" && <VignetteBank />}
       </div>
+
+      {/* Welcome Modal - Shows on first visit */}
+      <WelcomeModal />
     </main>
   );
 }

@@ -25,3 +25,7 @@ async def transcribe(file: UploadFile = File(...)):
     return JSONResponse({"ok": True, "language": info.language, "duration": info.duration, "segments": s})
   except Exception as e:
     return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/health")
+async def health():
+  return {"status": "healthy", "service": "transcriber"}

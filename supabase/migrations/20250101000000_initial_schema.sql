@@ -1,11 +1,32 @@
 -- Med Study Partner Database Schema
 -- Enable UUID extension
-create extension if not exists "uuid-ossp" schema extensions;
+create extension if not exists "uuid-ossp";
+
+-- Updated_at trigger function (create this first so other tables can use it)
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- Drop existing tables if they exist (for clean slate)
+drop table if exists attempts cascade;
+drop table if exists sessions cascade;
+drop table if exists mastery cascade;
+drop table if exists reviews cascade;
+drop table if exists cards cascade;
+drop table if exists material_packs cascade;
+drop table if exists materials cascade;
+drop table if exists lecture_packs cascade;
+drop table if exists lectures cascade;
+drop table if exists blocks cascade;
 
 -- Blocks table (study blocks/rotations)
-create table if not exists blocks (
+create table blocks (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   start_date date not null,
   end_date date not null,
@@ -15,9 +36,9 @@ create table if not exists blocks (
 );
 
 -- Lectures table
-create table if not exists lectures (
+create table lectures (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   block_id uuid references blocks(id) on delete cascade,
   title text not null,
   duration_sec integer default 0,
@@ -27,9 +48,9 @@ create table if not exists lectures (
 );
 
 -- Lecture packs (AI-generated content)
-create table if not exists lecture_packs (
+create table lecture_packs (
   id uuid primary key default gen_random_uuid(),
-  lecture_id uuid references lectures(id) on delete cascade,
+  lecture_id uuid not null references lectures(id) on delete cascade,
   abstract text,
   outline jsonb default '[]'::jsonb,
   pearls jsonb default '[]'::jsonb,
@@ -44,9 +65,9 @@ create table if not exists lecture_packs (
 );
 
 -- Materials table (uploaded study materials)
-create table if not exists materials (
+create table materials (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   block_id uuid references blocks(id) on delete cascade,
   title text not null,
   file_type text,
@@ -56,9 +77,9 @@ create table if not exists materials (
 );
 
 -- Material packs (AI-generated content from materials)
-create table if not exists material_packs (
+create table material_packs (
   id uuid primary key default gen_random_uuid(),
-  material_id uuid references materials(id) on delete cascade,
+  material_id uuid not null references materials(id) on delete cascade,
   abstract text,
   outline jsonb default '[]'::jsonb,
   pearls jsonb default '[]'::jsonb,
@@ -72,9 +93,9 @@ create table if not exists material_packs (
 );
 
 -- SRS Cards
-create table if not exists cards (
+create table cards (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   block_id uuid references blocks(id) on delete cascade,
   lecture_id uuid references lectures(id) on delete set null,
   material_id uuid references materials(id) on delete set null,
@@ -86,19 +107,19 @@ create table if not exists cards (
 );
 
 -- Reviews (SRS review history)
-create table if not exists reviews (
+create table reviews (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
-  card_id uuid references cards(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  card_id uuid not null references cards(id) on delete cascade,
   quality integer check (quality >= 0 and quality <= 5),
   reviewed_at timestamp with time zone default now()
 );
 
 -- Mastery (SRS state per card)
-create table if not exists mastery (
+create table mastery (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
-  card_id uuid references cards(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  card_id uuid not null references cards(id) on delete cascade,
   interval_days integer default 1,
   ease real default 2.5,
   reps integer default 0,
@@ -109,9 +130,9 @@ create table if not exists mastery (
 );
 
 -- Sessions (study sessions)
-create table if not exists sessions (
+create table sessions (
   id uuid primary key default gen_random_uuid(),
-  user_id text not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
   block_id uuid references blocks(id) on delete cascade,
   started_at timestamp with time zone default now(),
   ended_at timestamp with time zone,
@@ -119,16 +140,39 @@ create table if not exists sessions (
 );
 
 -- Attempts (detailed attempt tracking)
-create table if not exists attempts (
+create table attempts (
   id uuid primary key default gen_random_uuid(),
-  session_id uuid references sessions(id) on delete cascade,
-  card_id uuid references cards(id) on delete cascade,
+  session_id uuid not null references sessions(id) on delete cascade,
+  card_id uuid not null references cards(id) on delete cascade,
   quality integer check (quality >= 0 and quality <= 5),
   response_time_ms integer,
   attempted_at timestamp with time zone default now()
 );
 
--- Row Level Security (RLS) - owner_only policy
+-- Indexes for performance (create before RLS policies)
+create index idx_blocks_user on blocks(user_id);
+create index idx_lectures_user on lectures(user_id);
+create index idx_lectures_user_block on lectures(user_id, block_id);
+create index idx_lectures_block on lectures(block_id);
+create index idx_lecture_packs_lecture on lecture_packs(lecture_id);
+create index idx_materials_user on materials(user_id);
+create index idx_materials_user_block on materials(user_id, block_id);
+create index idx_material_packs_material on material_packs(material_id);
+create index idx_cards_user on cards(user_id);
+create index idx_cards_user_block on cards(user_id, block_id);
+create index idx_cards_lecture on cards(lecture_id);
+create index idx_cards_material on cards(material_id);
+create index idx_reviews_user on reviews(user_id);
+create index idx_reviews_user_card on reviews(user_id, card_id);
+create index idx_mastery_user on mastery(user_id);
+create index idx_mastery_user_due on mastery(user_id, due_at);
+create index idx_mastery_card on mastery(card_id);
+create index idx_sessions_user on sessions(user_id);
+create index idx_sessions_user_block on sessions(user_id, block_id);
+create index idx_attempts_session on attempts(session_id);
+create index idx_attempts_card on attempts(card_id);
+
+-- Row Level Security (RLS) - Enable on all tables
 alter table blocks enable row level security;
 alter table lectures enable row level security;
 alter table lecture_packs enable row level security;
@@ -141,56 +185,69 @@ alter table sessions enable row level security;
 alter table attempts enable row level security;
 
 -- RLS Policies (allow users to access only their own data)
-create policy "Users can access own blocks" on blocks for all using (auth.uid()::text = user_id);
-create policy "Users can access own lectures" on lectures for all using (auth.uid()::text = user_id);
-create policy "Users can access own lecture_packs" on lecture_packs for all using (
-  lecture_id in (select id from lectures where user_id = auth.uid()::text)
-);
-create policy "Users can access own materials" on materials for all using (auth.uid()::text = user_id);
-create policy "Users can access own material_packs" on material_packs for all using (
-  material_id in (select id from materials where user_id = auth.uid()::text)
-);
-create policy "Users can access own cards" on cards for all using (auth.uid()::text = user_id);
-create policy "Users can access own reviews" on reviews for all using (auth.uid()::text = user_id);
-create policy "Users can access own mastery" on mastery for all using (auth.uid()::text = user_id);
-create policy "Users can access own sessions" on sessions for all using (auth.uid()::text = user_id);
-create policy "Users can access own attempts" on attempts for all using (
-  session_id in (select id from sessions where user_id = auth.uid()::text)
-);
+create policy "Users can manage own blocks" on blocks
+  for all using (auth.uid() = user_id);
 
--- Indexes for performance
-create index idx_lectures_user_block on lectures(user_id, block_id);
-create index idx_lectures_block on lectures(block_id);
-create index idx_lecture_packs_lecture on lecture_packs(lecture_id);
-create index idx_materials_user_block on materials(user_id, block_id);
-create index idx_material_packs_material on material_packs(material_id);
-create index idx_cards_user_block on cards(user_id, block_id);
-create index idx_cards_lecture on cards(lecture_id);
-create index idx_cards_material on cards(material_id);
-create index idx_reviews_user_card on reviews(user_id, card_id);
-create index idx_mastery_user_due on mastery(user_id, due_at);
-create index idx_sessions_user_block on sessions(user_id, block_id);
-create index idx_attempts_session on attempts(session_id);
+create policy "Users can manage own lectures" on lectures
+  for all using (auth.uid() = user_id);
 
--- Updated_at trigger function
-create or replace function update_updated_at_column()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
+create policy "Users can manage own lecture_packs" on lecture_packs
+  for all using (
+    exists (
+      select 1 from lectures
+      where lectures.id = lecture_packs.lecture_id
+      and lectures.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can manage own materials" on materials
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage own material_packs" on material_packs
+  for all using (
+    exists (
+      select 1 from materials
+      where materials.id = material_packs.material_id
+      and materials.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can manage own cards" on cards
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage own reviews" on reviews
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage own mastery" on mastery
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage own sessions" on sessions
+  for all using (auth.uid() = user_id);
+
+create policy "Users can manage own attempts" on attempts
+  for all using (
+    exists (
+      select 1 from sessions
+      where sessions.id = attempts.session_id
+      and sessions.user_id = auth.uid()
+    )
+  );
 
 -- Apply updated_at triggers
 create trigger update_blocks_updated_at before update on blocks
   for each row execute function update_updated_at_column();
+
 create trigger update_lectures_updated_at before update on lectures
   for each row execute function update_updated_at_column();
+
 create trigger update_lecture_packs_updated_at before update on lecture_packs
   for each row execute function update_updated_at_column();
+
 create trigger update_materials_updated_at before update on materials
   for each row execute function update_updated_at_column();
+
 create trigger update_material_packs_updated_at before update on material_packs
   for each row execute function update_updated_at_column();
+
 create trigger update_mastery_updated_at before update on mastery
   for each row execute function update_updated_at_column();

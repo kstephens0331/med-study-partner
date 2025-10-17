@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractFromPptx } from "@/lib/ingest/pptx";
 import { extractFromPdf } from "@/lib/ingest/pdf";
+import { createServerClient } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 const MAX_LEN = 12000; // cap context to keep LLM snappy
@@ -16,6 +17,14 @@ function topKeywords(text: string, k = 20): string[] {
 }
 
 export async function POST(req: NextRequest) {
+  // Get authenticated user
+  const supabase = await createServerClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const form = await req.formData();
   const file = form.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
@@ -45,12 +54,43 @@ export async function POST(req: NextRequest) {
   const context = fullText.slice(0, MAX_LEN);
   const keywords = topKeywords(context, 30);
 
-  return NextResponse.json({
-    ok: true,
-    name: file.name,
-    bytes: file.size,
-    outline,
-    keywords,
-    context,
-  });
+  // Save to database
+  try {
+    const { data: material, error: dbError } = await supabase
+      .from("materials")
+      .insert({
+        user_id: user.id,
+        title: file.name,
+        file_type: name.endsWith(".pptx") ? "pptx" : "pdf",
+        content_text: fullText,
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error("Failed to save material:", dbError);
+      // Continue even if DB save fails - return extracted content
+    }
+
+    return NextResponse.json({
+      ok: true,
+      name: file.name,
+      bytes: file.size,
+      outline,
+      keywords,
+      context,
+      materialId: material?.id,
+    });
+  } catch (e: any) {
+    console.error("Database error:", e);
+    // Return extracted content even if DB fails
+    return NextResponse.json({
+      ok: true,
+      name: file.name,
+      bytes: file.size,
+      outline,
+      keywords,
+      context,
+    });
+  }
 }
