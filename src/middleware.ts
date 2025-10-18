@@ -29,10 +29,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refreshing the auth token
+  // Refreshing the auth token and session
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const user = session?.user;
 
   // Protect routes - redirect to login if not authenticated
   if (!user && !request.nextUrl.pathname.startsWith("/login") && !request.nextUrl.pathname.startsWith("/signup")) {
