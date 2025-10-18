@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   try {
     // Use service role client for database queries (bypasses RLS)
     // since we're already doing manual authorization above
+    console.log("SUPABASE_SERVICE_ROLE exists:", !!process.env.SUPABASE_SERVICE_ROLE);
+    console.log("User ID:", user.id);
+
     const adminClient = supaAdmin();
     const { data: materials, error } = await adminClient
       .from("materials")
@@ -24,6 +27,7 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error("Error fetching materials:", error);
+      console.error("Full error details:", JSON.stringify(error, null, 2));
       return NextResponse.json({ error: "Failed to fetch materials" }, { status: 500 });
     }
 
