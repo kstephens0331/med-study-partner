@@ -16,11 +16,10 @@ export const supaAdmin = () =>
   );
 
 // Server-side Supabase client for authenticated user (respects RLS)
-// Fixed for Next.js 15 to properly pass auth context
 export async function createServerClient() {
   const cookieStore = await cookies();
 
-  const client = createSSRServerClient(
+  return createSSRServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -34,24 +33,17 @@ export async function createServerClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // setAll called from Server Component - ignored
           }
         },
       },
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
+      global: {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
       },
     }
   );
-
-  // Ensure the session is loaded and the JWT is set for database queries
-  await client.auth.getSession();
-
-  return client;
 }
 
 // Legacy export for backwards compatibility

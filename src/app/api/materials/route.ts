@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  // Get authenticated user and session
+  // Get authenticated user
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = session.user;
-
   try {
-    const { data: materials, error } = await supabase
+    // Use service role client for database queries (bypasses RLS)
+    // since we're already doing manual authorization above
+    const adminClient = supaAdmin();
+    const { data: materials, error } = await adminClient
       .from("materials")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false});
 
     if (error) {
       console.error("Error fetching materials:", error);
