@@ -20,7 +20,7 @@ export const supaAdmin = () =>
 export async function createServerClient() {
   const cookieStore = await cookies();
 
-  return createSSRServerClient(
+  const client = createSSRServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -47,6 +47,11 @@ export async function createServerClient() {
       },
     }
   );
+
+  // Ensure the session is loaded and the JWT is set for database queries
+  await client.auth.getSession();
+
+  return client;
 }
 
 // Legacy export for backwards compatibility
