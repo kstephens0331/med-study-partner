@@ -5,11 +5,13 @@ export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { session }, error: authError } = await supabase.auth.getSession();
 
-  if (authError || !user) {
+  if (authError || !session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const user = session.user;
 
   try {
     const { front, back, sourceKind, materialId, lectureId } = await req.json();

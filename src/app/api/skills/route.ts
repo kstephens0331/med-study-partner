@@ -6,11 +6,13 @@ export const runtime = "nodejs";
 // GET - Fetch user's skill progress
 export async function GET(req: NextRequest) {
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { session }, error: authError } = await supabase.auth.getSession();
 
-  if (authError || !user) {
+  if (authError || !session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const user = session.user;
 
   try {
     const { data: skills, error } = await supabase
@@ -40,11 +42,13 @@ export async function GET(req: NextRequest) {
 // POST - Update skill progress
 export async function POST(req: NextRequest) {
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const { data: { session }, error: authError } = await supabase.auth.getSession();
 
-  if (authError || !user) {
+  if (authError || !session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const user = session.user;
 
   try {
     const { topicTag, correct, incorrect } = await req.json();
