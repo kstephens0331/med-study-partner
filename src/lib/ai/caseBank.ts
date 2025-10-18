@@ -1,15 +1,56 @@
-export type MicroCase = { prompt: string; tags: string[] };
+export type MicroCase = {
+  prompt: string;
+  labs?: Record<string, string | number>;
+  vitals?: Record<string, string | number>;
+  choices: { label: string; text: string }[];
+  correctAnswer: string;
+  explanation: string;
+  tags: string[];
+};
 const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
 
 export function randomCase(system: string): MicroCase {
   switch (system) {
     case "heme": {
-      const bleed = pick(["gingival bleeding","hemarthrosis","menorrhagia","post-op ooze"]);
-      const pt = pick([12,18,24]); const ptt = pick([30,45,80]); const plt = pick([70,180,300]);
+      const age = pick([22,28,45,67]);
+      const bleed = pick(["gingival bleeding","hemarthrosis","menorrhagia","post-surgical oozing"]);
+      const pt = pick([12,18,24]);
+      const ptt = pick([30,45,80]);
+      const plt = pick([70,180,300]);
+      const gender = bleed === "hemarthrosis" ? "man" : bleed === "menorrhagia" ? "woman" : pick(["man","woman"]);
+
       return {
-        prompt:
-`Micro-case: ${pick([22,28,45,67])}-year-old with ${bleed}. PT ${pt}s, aPTT ${ptt}s, platelets ${plt}K.
-Give ONE immediate next step and ONE test to confirm your leading suspicion.`,
+        prompt: `A ${age}-year-old ${gender} presents to the emergency department with ${bleed} that started 2 days ago. The patient reports a history of easy bruising since childhood and recalls prolonged bleeding after dental extractions. There is no family history of bleeding disorders. The patient takes no medications and denies recent trauma.
+
+On physical examination, vital signs are within normal limits. The patient appears well, with multiple ecchymoses on the extremities. ${bleed === "hemarthrosis" ? "The right knee is swollen and tender with limited range of motion." : bleed === "menorrhagia" ? "Pelvic examination reveals heavy menstrual bleeding." : "There is active bleeding from the gums."}
+
+What is the most likely diagnosis?`,
+        labs: {
+          "PT": `${pt} sec (normal: 11-13.5)`,
+          "aPTT": `${ptt} sec (normal: 25-35)`,
+          "Platelets": `${plt},000/μL (normal: 150-400)`,
+          "INR": "1.0",
+          "Bleeding time": ptt > 60 ? "Prolonged" : "Normal"
+        },
+        vitals: {
+          "BP": "118/76 mmHg",
+          "HR": "82 bpm",
+          "Temp": "98.6°F (37°C)",
+          "RR": "16/min"
+        },
+        choices: [
+          { label: "A", text: "Hemophilia A (Factor VIII deficiency)" },
+          { label: "B", text: "Hemophilia B (Factor IX deficiency)" },
+          { label: "C", text: "Von Willebrand disease" },
+          { label: "D", text: "Immune thrombocytopenic purpura (ITP)" },
+          { label: "E", text: "Vitamin K deficiency" }
+        ],
+        correctAnswer: ptt > 60 ? "A" : plt < 100 ? "D" : "C",
+        explanation: ptt > 60
+          ? "Hemophilia A is suggested by markedly prolonged aPTT with normal PT and platelet count. The history of bleeding since childhood, easy bruising, and hemarthrosis are classic. Factor VIII assay would confirm the diagnosis."
+          : plt < 100
+          ? "ITP presents with thrombocytopenia and mucocutaneous bleeding. Normal PT/aPTT with isolated thrombocytopenia suggests platelet destruction rather than coagulation factor deficiency."
+          : "Von Willebrand disease is the most common inherited bleeding disorder, presenting with mucocutaneous bleeding, easy bruising, and prolonged bleeding time. Both aPTT may be mildly prolonged or normal.",
         tags: ["heme:coag-initiation","heme:platelet-fxn"]
       };
     }

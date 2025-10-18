@@ -86,12 +86,12 @@ export default function VignetteBank() {
       {/* System Selector */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="mb-3 text-sm font-medium text-zinc-300">Generate Case By System</div>
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-5 lg:grid-cols-9">
+        <div className="flex flex-wrap gap-2">
           {SYSTEMS.map((system) => (
             <button
               key={system.id}
               onClick={() => generateVignette(system.id)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-200 hover:border-emerald-600 hover:bg-emerald-900/20"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-200 hover:border-emerald-600 hover:bg-emerald-900/20 transition-colors whitespace-nowrap"
             >
               {system.label}
             </button>
