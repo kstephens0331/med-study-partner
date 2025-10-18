@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 import { sm2Step, nowPlusDays, type SM2State } from "@/lib/srs";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  // Get authenticated user and session
+  // Get authenticated user
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-
-  const user = session.user;
 
   const { cardId, quality } = await req.json();
 
@@ -33,8 +31,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const adminClient = supaAdmin();
+
     // Get current mastery state for this card
-    const { data: masteryData, error: masteryError } = await supabase
+    const { data: masteryData, error: masteryError } = await adminClient
       .from("mastery")
       .select("*")
       .eq("user_id", user.id)
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const dueAt = nowPlusDays(newInterval);
 
     // Upsert mastery record
-    const { error: upsertError } = await supabase
+    const { error: upsertError } = await adminClient
       .from("mastery")
       .upsert({
         user_id: user.id,
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Record the review in reviews table
-    const { error: reviewError } = await supabase.from("reviews").insert({
+    const { error: reviewError } = await adminClient.from("reviews").insert({
       user_id: user.id,
       card_id: cardId,
       quality,

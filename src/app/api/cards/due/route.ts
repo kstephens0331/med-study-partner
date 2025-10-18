@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  // Get authenticated user and session
+  // Get authenticated user
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = session.user;
-
   try {
+    const adminClient = supaAdmin();
     // Get all cards with their mastery state for this user
-    const { data: cards, error } = await supabase
+    const { data: cards, error } = await adminClient
       .from("cards")
       .select(`
         id,

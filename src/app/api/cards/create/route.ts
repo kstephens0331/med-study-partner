@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const user = session.user;
 
   try {
     const { front, back, sourceKind, materialId, lectureId } = await req.json();
@@ -23,8 +21,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const adminClient = supaAdmin();
+
     // Create the card
-    const { data: card, error: cardError } = await supabase
+    const { data: card, error: cardError } = await adminClient
       .from("cards")
       .insert({
         user_id: user.id,
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize mastery state for the new card
-    const { error: masteryError } = await supabase
+    const { error: masteryError } = await adminClient
       .from("mastery")
       .insert({
         user_id: user.id,

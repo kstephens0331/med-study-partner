@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractFromPptx } from "@/lib/ingest/pptx";
 import { extractFromPdf } from "@/lib/ingest/pdf";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 const MAX_LEN = 12000; // cap context to keep LLM snappy
@@ -17,15 +17,13 @@ function topKeywords(text: string, k = 20): string[] {
 }
 
 export async function POST(req: NextRequest) {
-  // Get authenticated user and session
+  // Get authenticated user
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const user = session.user;
 
   const form = await req.formData();
   const file = form.get("file") as File | null;
@@ -58,7 +56,8 @@ export async function POST(req: NextRequest) {
 
   // Save to database
   try {
-    const { data: material, error: dbError } = await supabase
+    const adminClient = supaAdmin();
+    const { data: material, error: dbError } = await adminClient
       .from("materials")
       .insert({
         user_id: user.id,

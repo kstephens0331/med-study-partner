@@ -1,19 +1,17 @@
 // src/app/api/blocks/current/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabaseServer";
+import { createServerClient, supaAdmin } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  // Get authenticated user and session
+  // Get authenticated user
   const supabase = await createServerClient();
-  const { data: { session }, error: authError } = await supabase.auth.getSession();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (authError || !session?.user) {
+  if (authError || !user) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-
-  const user = session.user;
 
   const { name, startDate, endDate } = await req.json();
 
@@ -21,8 +19,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
   }
 
+  const adminClient = supaAdmin();
+
   // Check if block already exists
-  const { data: existing } = await supabase
+  const { data: existing } = await adminClient
     .from("blocks")
     .select("*")
     .eq("user_id", user.id)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Create new block
-  const { data, error } = await supabase
+  const { data, error } = await adminClient
     .from("blocks")
     .insert({
       user_id: user.id,
