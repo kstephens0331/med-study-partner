@@ -110,13 +110,15 @@ export default function LectureViewer() {
           <label className="inline-flex items-center gap-3">
             <input
               type="file"
-              accept=".pptx,.pdf"
+              accept=".pptx,.pdf,.docx,.mp3,.mp4,.m4a,.wav,.webm,.ogg,.txt,.md,.markdown,.note,.notes"
               onChange={handleUpload}
               disabled={uploading}
               className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-2 file:text-white hover:file:bg-emerald-500 file:disabled:bg-zinc-700 file:disabled:cursor-not-allowed"
             />
             <span className="text-xs text-zinc-400">
-              Supports <span className="text-zinc-200">.pptx</span> and <span className="text-zinc-200">.pdf</span>
+              Documents: <span className="text-zinc-200">.pptx .pdf .docx</span> |
+              Audio/Video: <span className="text-zinc-200">.mp3 .mp4 .m4a .wav</span> |
+              Notes: <span className="text-zinc-200">.txt .md .note</span>
             </span>
           </label>
           {uploading && (

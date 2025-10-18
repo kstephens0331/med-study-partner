@@ -33,18 +33,57 @@ export async function POST(req: NextRequest) {
   const name = file.name.toLowerCase();
   let fullText = "";
   let outline: string[] = [];
+  let fileType = "unknown";
 
   try {
+    // Document files (.pptx, .pdf, .docx)
     if (name.endsWith(".pptx")) {
       const deck = await extractFromPptx(buf);
       fullText = deck.fullText;
       outline = deck.outline;
+      fileType = "pptx";
     } else if (name.endsWith(".pdf")) {
       const pdf = await extractFromPdf(buf);
       fullText = pdf.fullText;
       outline = pdf.outline;
-    } else {
-      return NextResponse.json({ error: "Unsupported file type (use .pptx or .pdf)" }, { status: 400 });
+      fileType = "pdf";
+    } else if (name.endsWith(".docx")) {
+      // Use ingestor service for .docx files
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(process.env.NEXT_PUBLIC_INGESTOR_URL!, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      fullText = data.text || "";
+      outline = data.outline || [];
+      fileType = "docx";
+    }
+    // Audio/Video files (.mp3, .mp4, .m4a, .wav)
+    else if (name.match(/\.(mp3|mp4|m4a|wav|webm|ogg)$/)) {
+      // Use transcriber service for audio/video files
+      const formData = new FormData();
+      formData.append("audio", file);
+      const response = await fetch(process.env.NEXT_PUBLIC_TRANSCRIBER_URL!, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      fullText = data.transcript || data.text || "";
+      fileType = name.split(".").pop() || "audio";
+    }
+    // Text-based note files (.txt, .md, .note, etc.)
+    else if (name.match(/\.(txt|md|markdown|note|notes|text)$/)) {
+      const decoder = new TextDecoder("utf-8");
+      fullText = decoder.decode(buf);
+      fileType = name.split(".").pop() || "text";
+    }
+    // Unsupported file type
+    else {
+      return NextResponse.json({
+        error: "Unsupported file type. Supported: .pptx, .pdf, .docx, .mp3, .mp4, .m4a, .wav, .txt, .md, .note"
+      }, { status: 400 });
     }
   } catch (e: any) {
     return NextResponse.json({ error: `Parse failed: ${e?.message || "unknown error"}` }, { status: 500 });
@@ -62,7 +101,7 @@ export async function POST(req: NextRequest) {
       .insert({
         user_id: user.id,
         title: file.name,
-        file_type: name.endsWith(".pptx") ? "pptx" : "pdf",
+        file_type: fileType,
         content_text: fullText,
       })
       .select()
