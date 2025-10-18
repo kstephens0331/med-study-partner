@@ -16,6 +16,7 @@ export const supaAdmin = () =>
   );
 
 // Server-side Supabase client for authenticated user (respects RLS)
+// Fixed for Next.js 15 to properly pass auth context
 export async function createServerClient() {
   const cookieStore = await cookies();
 
@@ -38,6 +39,11 @@ export async function createServerClient() {
             // user sessions.
           }
         },
+      },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
       },
     }
   );
