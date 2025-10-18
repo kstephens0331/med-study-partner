@@ -430,55 +430,41 @@ export default function Home() {
         {/* Tab Content */}
         {activeTab === "coach" && (
           <>
-            {/* Upload + Topic Lock */}
+            {/* Topic Lock Option */}
             <section className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="inline-flex items-center gap-3">
-              <input
-                type="file"
-                accept=".pptx,.pdf"
-                onChange={handleUpload}
-                className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-2 file:text-white hover:file:bg-emerald-500"
-              />
-              <span className="text-xs text-zinc-400">
-                Supports <span className="text-zinc-200">.pptx</span> and <span className="text-zinc-200">.pdf</span>
-              </span>
-            </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={topicLock}
+                  onChange={(e) => setTopicLock(e.target.checked)}
+                  className="h-4 w-4 accent-emerald-600"
+                />
+                Lock coach to uploaded material (upload from Materials tab)
+              </label>
 
-            <label className="ml-auto inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={topicLock}
-                onChange={(e) => setTopicLock(e.target.checked)}
-                className="h-4 w-4 accent-emerald-600"
-              />
-              Lock coach to uploaded material
-            </label>
-          </div>
-
-          {deckOutline.length > 0 && (
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
-                <div className="text-xs font-medium text-zinc-300">Outline preview</div>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-zinc-300">
-                  {deckOutline.slice(0, 10).map((l, i) => (
-                    <li key={i}>{l}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
-                <div className="text-xs font-medium text-zinc-300">Keywords</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {deckKeywords.slice(0, 15).map((k, i) => (
-                    <span key={i} className="rounded-full bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300">
-                      {k}
-                    </span>
-                  ))}
+              {deckOutline.length > 0 && (
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+                    <div className="text-xs font-medium text-zinc-300">Outline preview</div>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-zinc-300">
+                      {deckOutline.slice(0, 10).map((l, i) => (
+                        <li key={i}>{l}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3">
+                    <div className="text-xs font-medium text-zinc-300">Keywords</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {deckKeywords.slice(0, 15).map((k, i) => (
+                        <span key={i} className="rounded-full bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300">
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
-        </section>
+              )}
+            </section>
 
         {/* Mode toggle */}
         <section className="mb-4 flex flex-wrap items-center gap-4">

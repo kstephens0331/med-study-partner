@@ -17,6 +17,8 @@ export default function LectureViewer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
     fetchMaterials();
@@ -41,6 +43,35 @@ export default function LectureViewer() {
       setError(e.message || "Failed to load materials");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+
+      if (!data.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      // Refresh materials list after successful upload
+      await fetchMaterials();
+
+      // Clear the file input
+      e.target.value = "";
+    } catch (err: any) {
+      setUploadError(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -70,21 +101,47 @@ export default function LectureViewer() {
     );
   }
 
-  if (materials.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <div className="text-center">
-          <div className="mb-2 text-xl text-zinc-300">No materials yet</div>
-          <div className="text-sm text-zinc-500">
-            Upload a PDF or PPTX file from the main page to get started
+  return (
+    <div className="flex h-full flex-col gap-4 p-4">
+      {/* Upload Section */}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+        <h2 className="mb-3 text-lg font-semibold text-zinc-200">Upload Material</h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="inline-flex items-center gap-3">
+            <input
+              type="file"
+              accept=".pptx,.pdf"
+              onChange={handleUpload}
+              disabled={uploading}
+              className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-2 file:text-white hover:file:bg-emerald-500 file:disabled:bg-zinc-700 file:disabled:cursor-not-allowed"
+            />
+            <span className="text-xs text-zinc-400">
+              Supports <span className="text-zinc-200">.pptx</span> and <span className="text-zinc-200">.pdf</span>
+            </span>
+          </label>
+          {uploading && (
+            <span className="text-sm text-emerald-400">Uploading...</span>
+          )}
+        </div>
+        {uploadError && (
+          <div className="mt-3 rounded-lg border border-rose-800 bg-rose-900/20 px-3 py-2 text-sm text-rose-300">
+            {uploadError}
+          </div>
+        )}
+      </div>
+
+      {/* Materials List and Viewer */}
+      {materials.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <div className="mb-2 text-xl text-zinc-300">No materials yet</div>
+            <div className="text-sm text-zinc-500">
+              Upload a PDF or PPTX file above to get started
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex h-full gap-4 p-4">
+      ) : (
+        <div className="flex flex-1 gap-4 overflow-hidden">
       {/* Sidebar - Material List */}
       <div className="w-80 flex-shrink-0">
         <div className="mb-4">
@@ -182,6 +239,8 @@ export default function LectureViewer() {
           </div>
         )}
       </div>
+        </div>
+      )}
     </div>
   );
 }
