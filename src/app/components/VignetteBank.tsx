@@ -32,14 +32,8 @@ export default function VignetteBank() {
   const [showGenerator, setShowGenerator] = useState(false);
 
   async function generateVignette(system: string) {
-    const microCase = randomCase(system);
-    const newVignette: VignetteWithAnswer = {
-      ...microCase,
-      id: `${Date.now()}-${Math.random()}`,
-      selectedAnswer: null,
-      revealed: false,
-    };
-    setVignettes([newVignette, ...vignettes]);
+    // Load from base question bank instead of randomCase
+    await loadBaseVignettes(system, 1);
   }
 
   async function loadGeneratedVignettes() {
@@ -64,6 +58,36 @@ export default function VignetteBank() {
       }
     } catch (e) {
       console.error("Failed to load generated vignettes:", e);
+    }
+  }
+
+  async function loadBaseVignettes(system?: string, count: number = 20) {
+    try {
+      const params = new URLSearchParams();
+      if (system) params.set("system", system);
+      params.set("limit", count.toString());
+      params.set("random", "true"); // Get random selection
+
+      const res = await fetch(`/api/vignettes/base?${params}`);
+      const data = await res.json();
+      if (data.ok && data.vignettes) {
+        const formatted: VignetteWithAnswer[] = data.vignettes.map((v: any) => ({
+          id: v.id,
+          prompt: v.prompt,
+          labs: v.labs,
+          vitals: v.vitals,
+          choices: v.choices,
+          correctAnswer: v.correct_answer,
+          explanation: v.explanation,
+          comparisonTable: v.comparison_table,
+          tags: v.tags,
+          selectedAnswer: null,
+          revealed: false,
+        }));
+        setVignettes([...formatted, ...vignettes]);
+      }
+    } catch (e) {
+      console.error("Failed to load base vignettes:", e);
     }
   }
 
@@ -99,9 +123,10 @@ export default function VignetteBank() {
       )
     : vignettes;
 
-  // Load generated vignettes on mount
+  // Load vignettes on mount (base + user-generated)
   useEffect(() => {
-    loadGeneratedVignettes();
+    loadBaseVignettes(undefined, 10); // Load 10 random from base bank
+    loadGeneratedVignettes(); // Load user's custom generated vignettes
   }, []);
 
   return (
