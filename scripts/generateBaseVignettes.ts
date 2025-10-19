@@ -13,10 +13,24 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
+import { resolve } from 'path';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE!;
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY!;
+// Load environment variables from .env.local
+config({ path: resolve(process.cwd(), '.env.local') });
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE || !TOGETHER_API_KEY) {
+  console.error('❌ Missing required environment variables!');
+  console.error('Please ensure .env.local contains:');
+  console.error('  - NEXT_PUBLIC_SUPABASE_URL');
+  console.error('  - SUPABASE_SERVICE_ROLE');
+  console.error('  - TOGETHER_API_KEY');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
