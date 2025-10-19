@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { randomCase, type MicroCase } from "@/lib/ai/caseBank";
+import VignetteGenerator from "./VignetteGenerator";
 
 const SYSTEMS = [
   { id: "heme", label: "Hematology", complete: true },
@@ -28,8 +29,9 @@ type VignetteWithAnswer = MicroCase & {
 export default function VignetteBank() {
   const [vignettes, setVignettes] = useState<VignetteWithAnswer[]>([]);
   const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
+  const [showGenerator, setShowGenerator] = useState(false);
 
-  function generateVignette(system: string) {
+  async function generateVignette(system: string) {
     const microCase = randomCase(system);
     const newVignette: VignetteWithAnswer = {
       ...microCase,
@@ -38,6 +40,31 @@ export default function VignetteBank() {
       revealed: false,
     };
     setVignettes([newVignette, ...vignettes]);
+  }
+
+  async function loadGeneratedVignettes() {
+    try {
+      const res = await fetch("/api/vignettes/generate");
+      const data = await res.json();
+      if (data.ok && data.vignettes) {
+        const formatted: VignetteWithAnswer[] = data.vignettes.map((v: any) => ({
+          id: v.id,
+          prompt: v.prompt,
+          labs: v.labs,
+          vitals: v.vitals,
+          choices: v.choices,
+          correctAnswer: v.correct_answer,
+          explanation: v.explanation,
+          comparisonTable: v.comparison_table,
+          tags: v.tags,
+          selectedAnswer: null,
+          revealed: false,
+        }));
+        setVignettes([...formatted, ...vignettes]);
+      }
+    } catch (e) {
+      console.error("Failed to load generated vignettes:", e);
+    }
   }
 
   function selectAnswer(id: string, answer: string) {
@@ -72,6 +99,11 @@ export default function VignetteBank() {
       )
     : vignettes;
 
+  // Load generated vignettes on mount
+  useEffect(() => {
+    loadGeneratedVignettes();
+  }, []);
+
   return (
     <div className="mx-auto max-w-6xl p-4">
       {/* Header */}
@@ -84,6 +116,12 @@ export default function VignetteBank() {
         </div>
         <div className="flex items-center gap-2">
           <div className="text-sm text-zinc-400">{vignettes.length} cases</div>
+          <button
+            onClick={() => setShowGenerator(!showGenerator)}
+            className="rounded-lg bg-emerald-600 px-3 py-1 text-sm text-white hover:bg-emerald-500"
+          >
+            🤖 AI Generate from Materials
+          </button>
           {vignettes.length > 0 && (
             <button
               onClick={clearAll}
@@ -95,8 +133,22 @@ export default function VignetteBank() {
         </div>
       </div>
 
+      {/* AI Generator Modal */}
+      {showGenerator && (
+        <div className="mb-6">
+          <VignetteGenerator />
+          <button
+            onClick={() => setShowGenerator(false)}
+            className="mt-4 text-sm text-zinc-500 hover:text-zinc-300 underline"
+          >
+            Close Generator
+          </button>
+        </div>
+      )}
+
       {/* System Selector */}
-      <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+      {!showGenerator && (
+        <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="mb-3 text-sm font-medium text-zinc-300">Generate Case By System</div>
         <div className="mb-3 text-xs text-zinc-500">
           ✅ = Full USMLE depth available • 🚧 = Under development
@@ -117,9 +169,10 @@ export default function VignetteBank() {
           ))}
         </div>
       </div>
+      )}
 
       {/* Filter */}
-      {vignettes.length > 0 && (
+      {!showGenerator && vignettes.length > 0 && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-zinc-400">Filter:</span>
           <button
@@ -149,7 +202,7 @@ export default function VignetteBank() {
       )}
 
       {/* Vignette List */}
-      {filteredVignettes.length === 0 ? (
+      {!showGenerator && filteredVignettes.length === 0 ? (
         <div className="flex items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/40 p-12">
           <div className="text-center">
             <div className="mb-2 text-lg text-zinc-300">No vignettes yet</div>

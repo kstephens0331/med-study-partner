@@ -885,7 +885,212 @@ Which of the following is the most appropriate immediate next step in management
       };
     }
 
-    case "endo":
+    case "endo": {
+      const age = pick([24, 38, 56]);
+      const tsh = pick([0.01, 0.05, 12.5]);
+      const condition = tsh < 0.1 ? "hyperthyroid" : "hypothyroid";
+
+      return {
+        prompt: condition === "hyperthyroid"
+          ? `A ${age}-year-old woman presents to her primary care physician with a 3-month history of palpitations, heat intolerance, and unintentional weight loss of 15 pounds despite increased appetite. She reports feeling anxious and irritable, with difficulty sleeping. She has also noticed hand tremors when holding objects and increased frequency of bowel movements (3-4 times daily). Menstrual periods have become irregular and lighter. No recent medication changes. Family history is significant for autoimmune thyroid disease in her mother.
+
+On physical examination, the patient appears anxious and restless. Skin is warm and moist. A diffuse, non-tender goiter is palpated. Cardiac exam reveals tachycardia with a regular rhythm and a systolic flow murmur. Fine tremor is noted in outstretched hands. Brisk deep tendon reflexes are elicited. Exophthalmos and lid lag are observed bilaterally.
+
+Which of the following is the most likely diagnosis?`
+          : `A ${age}-year-old woman presents to her primary care physician with a 6-month history of fatigue, weight gain of 20 pounds, and cold intolerance. She reports difficulty concentrating at work and feeling depressed. Her voice has become deeper, and she has noticed thinning of her hair and dry skin. Constipation has worsened despite increased fiber intake. Menstrual periods have become heavier and more frequent.
+
+On physical examination, the patient appears lethargic with a flat affect. Skin is cool, dry, and pale. Non-pitting edema is noted in the periorbital region and lower extremities. Thyroid gland is not palpable. Cardiac exam reveals bradycardia with distant heart sounds. Reflexes are delayed (slow relaxation phase of Achilles reflex). No tremor.
+
+Which of the following is the most likely diagnosis?`,
+
+        labs: condition === "hyperthyroid" ? [
+          { test: "TSH", result: `${tsh} μU/mL`, referenceRange: "0.4–4.0 μU/mL" },
+          { test: "Free T4", result: "3.8 ng/dL", referenceRange: "0.8–1.8 ng/dL" },
+          { test: "Free T3", result: "12.5 pg/mL", referenceRange: "2.3–4.2 pg/mL" },
+          { test: "TSI (TSH receptor antibodies)", result: "Positive (elevated)", referenceRange: "Negative" },
+          { test: "Thyroid peroxidase antibodies", result: "Positive (1:1600)", referenceRange: "<35 IU/mL" },
+          { test: "Radioactive iodine uptake (RAIU)", result: "45% at 24 hours (diffusely increased)", referenceRange: "10–30%" },
+        ] : [
+          { test: "TSH", result: `${tsh} μU/mL`, referenceRange: "0.4–4.0 μU/mL" },
+          { test: "Free T4", result: "0.3 ng/dL", referenceRange: "0.8–1.8 ng/dL" },
+          { test: "Free T3", result: "1.2 pg/mL", referenceRange: "2.3–4.2 pg/mL" },
+          { test: "Thyroid peroxidase antibodies", result: "Positive (1:2500)", referenceRange: "<35 IU/mL" },
+          { test: "Anti-thyroglobulin antibodies", result: "Positive", referenceRange: "Negative" },
+          { test: "Lipid panel", result: "Total cholesterol 285 mg/dL, LDL 195 mg/dL", referenceRange: "Total <200, LDL <100" },
+        ],
+
+        vitals: condition === "hyperthyroid" ? {
+          "BP": "142/68 mmHg (widened pulse pressure)",
+          "HR": "118 bpm (regular)",
+          "Temp": "99.2°F (37.3°C)",
+          "RR": "18/min",
+          "Weight": `${age < 30 ? "110" : "125"} lbs (15 lb loss in 3 months)`
+        } : {
+          "BP": "108/72 mmHg",
+          "HR": "52 bpm (regular, bradycardic)",
+          "Temp": "96.8°F (36.0°C)",
+          "RR": "14/min",
+          "Weight": `${age < 30 ? "155" : "170"} lbs (20 lb gain in 6 months)`
+        },
+
+        choices: condition === "hyperthyroid" ? [
+          { label: "A", text: "Graves' disease" },
+          { label: "B", text: "Toxic multinodular goiter" },
+          { label: "C", text: "Subacute thyroiditis (de Quervain's)" },
+          { label: "D", text: "Factitious hyperthyroidism (thyrotoxicosis factitia)" },
+          { label: "E", text: "TSH-secreting pituitary adenoma" }
+        ] : [
+          { label: "A", text: "Hashimoto's thyroiditis (chronic autoimmune thyroiditis)" },
+          { label: "B", text: "Subclinical hypothyroidism" },
+          { label: "C", text: "Central hypothyroidism (secondary to pituitary dysfunction)" },
+          { label: "D", text: "Sick euthyroid syndrome" },
+          { label: "E", text: "Iodine deficiency" }
+        ],
+
+        correctAnswer: condition === "hyperthyroid" ? "A" : "A",
+
+        explanation: condition === "hyperthyroid"
+          ? `**Graves' disease** is the correct diagnosis.
+
+**Why this is correct:**
+- **Clinical presentation** of **hyperthyroidism**: Weight loss despite increased appetite, heat intolerance, palpitations, tremor, hyperdefecation, menstrual irregularity.
+- **Graves-specific features:**
+  - **Diffuse goiter** (thyroid gland enlargement)
+  - **Ophthalmopathy** (exophthalmos, lid lag) — **pathognomonic for Graves'**
+  - **Pretibial myxedema** (not mentioned but can occur)
+- **Lab findings:**
+  - **Suppressed TSH** (${tsh} μU/mL) with **elevated T4 and T3** (primary hyperthyroidism)
+  - **TSI (TSH receptor antibodies) positive** — **diagnostic of Graves' disease**
+  - **High RAIU (45%)** with **diffuse uptake** on scan
+- **Autoimmune mechanism**: TSI antibodies mimic TSH → bind to TSH receptors → unregulated thyroid hormone production
+- **Family history** of autoimmune thyroid disease supports autoimmune etiology
+
+**Pathophysiology:**
+1. **Autoantibodies (TSI)** stimulate TSH receptors on thyroid follicular cells
+2. **Unregulated T3/T4 production** → ↑ metabolic rate, ↑ sympathetic activity
+3. **Negative feedback suppresses TSH** (TSH <0.1 μU/mL)
+4. **Ophthalmopathy mechanism**: TSI cross-reacts with orbital fibroblast antigens → inflammation, glycosaminoglycan deposition, extraocular muscle swelling → proptosis
+5. **Goiter**: Chronic TSH receptor stimulation → follicular cell hypertrophy/hyperplasia
+
+**Treatment:**
+- **First-line**: Antithyroid drugs (methimazole preferred over PTU, except in pregnancy 1st trimester)
+- **Beta-blockers** (propranolol) for symptomatic relief (tremor, palpitations)
+- **Definitive**: Radioactive iodine (I-131) ablation or thyroidectomy
+- **Ophthalmopathy**: May worsen with RAI; treat with corticosteroids, orbital decompression if severe
+
+---
+
+**Why the other answers are wrong:**
+
+**B. Toxic multinodular goiter:**
+- **Nodular goiter** (multiple "hot" nodules), **NOT diffuse**
+- **No ophthalmopathy** (exophthalmos is specific to Graves')
+- **TSI antibodies negative**
+- **RAIU shows patchy/focal uptake**, not diffuse
+- Typically in **older patients (>60 years)**
+
+**C. Subacute thyroiditis (de Quervain's):**
+- **Painful thyroid** (tender on palpation) — this patient has non-tender goiter
+- **Preceded by viral URI** (1–3 weeks prior)
+- **Triphasic course**: Hyperthyroid (destructive release of hormone) → hypothyroid → recovery
+- **Low RAIU (<5%)** — thyroid is inflamed/damaged, NOT producing hormone
+- **ESR markedly elevated** (>50 mm/hr)
+
+**D. Factitious hyperthyroidism:**
+- **Exogenous thyroid hormone ingestion** (levothyroxine abuse, often for weight loss)
+- **Low thyroglobulin** (no endogenous production)
+- **Low RAIU** (thyroid is suppressed by exogenous hormone)
+- **No goiter, no ophthalmopathy**
+
+**E. TSH-secreting pituitary adenoma:**
+- **Elevated TSH** (not suppressed) — inappropriate TSH secretion despite high T4/T3
+- **Secondary hyperthyroidism** (central, not primary)
+- **MRI shows pituitary mass**
+- **Very rare** (<1% of hyperthyroidism cases)`
+
+          : `**Hashimoto's thyroiditis (chronic autoimmune thyroiditis)** is the correct diagnosis.
+
+**Why this is correct:**
+- **Clinical presentation** of **hypothyroidism**: Fatigue, weight gain, cold intolerance, constipation, depression, cognitive slowing, menorrhagia
+- **Hashimoto-specific features:**
+  - **Autoimmune** (positive thyroid peroxidase antibodies and anti-thyroglobulin antibodies)
+  - **Family history** of autoimmune thyroid disease
+  - **Younger to middle-aged women** (peak 30–50 years, but can occur at any age)
+- **Lab findings:**
+  - **Elevated TSH** (${tsh} μU/mL) with **low T4 and T3** (primary hypothyroidism)
+  - **Positive TPO antibodies** (1:2500) — found in >90% of Hashimoto's
+  - **Hyperlipidemia** (total cholesterol 285, LDL 195) — hypothyroidism → ↓ LDL receptor expression
+- **Pathophysiology**: Autoimmune destruction of thyroid follicles → fibrosis → hypothyroidism
+
+**Pathophysiology:**
+1. **T-cell mediated destruction** of thyroid follicular cells (Type IV hypersensitivity)
+2. **Lymphocytic infiltration** and **germinal center formation** in thyroid gland
+3. **Progressive thyroid failure** → ↓ T3/T4 production
+4. **Compensatory TSH elevation** (pituitary attempts to stimulate failing thyroid)
+5. **Myxedema**: Accumulation of glycosaminoglycans in skin/tissues → non-pitting edema
+
+**Clinical Features of Hypothyroidism:**
+- **Metabolic slowing**: Fatigue, weight gain, cold intolerance
+- **Cardiovascular**: Bradycardia, diastolic hypertension, pericardial effusion
+- **Neurologic**: Delayed reflexes, carpal tunnel syndrome, cognitive slowing, depression
+- **GI**: Constipation (↓ GI motility)
+- **Reproductive**: Menorrhagia, infertility
+- **Skin**: Dry, cool, pale; hair thinning; periorbital edema
+
+**Treatment:**
+- **Levothyroxine** (synthetic T4) daily, dose titrated to normalize TSH
+- **Goal TSH**: 0.5–2.5 μU/mL (lower end for younger patients, higher for elderly)
+- **Monitor TSH every 6–8 weeks** initially, then annually once stable
+- **Take on empty stomach** (30–60 min before breakfast) for optimal absorption
+
+---
+
+**Why the other answers are wrong:**
+
+**B. Subclinical hypothyroidism:**
+- **Elevated TSH (4.5–10 μU/mL)** with **NORMAL T4** (asymptomatic or mild symptoms)
+- This patient has **low T4 (0.3 ng/dL)** → overt hypothyroidism, not subclinical
+- **Treatment debated** for subclinical (treat if TSH >10, symptoms, or pregnancy)
+
+**C. Central hypothyroidism (secondary/tertiary):**
+- **Low or normal TSH** with **low T4** (pituitary/hypothalamus failure → ↓ TSH production)
+- This patient has **elevated TSH** → intact pituitary response
+- **Causes**: Pituitary adenoma, Sheehan syndrome (postpartum pituitary necrosis), brain radiation
+- **Requires MRI of pituitary** to diagnose
+
+**D. Sick euthyroid syndrome:**
+- Occurs in **critically ill patients** (sepsis, ICU, major surgery)
+- **Low T3** (↓ peripheral conversion of T4 → T3), **normal or low T4**, **normal or low TSH**
+- **Not true hypothyroidism** — thyroid function normalizes after recovery
+- **Do NOT treat with levothyroxine**
+
+**E. Iodine deficiency:**
+- **Endemic goiter** in areas with iodine-poor soil (mountainous regions, inland areas)
+- **Rare in developed countries** with iodized salt
+- **TSH elevated**, **T4 low**, **but NO autoantibodies**
+- **Goiter present** (compensatory thyroid enlargement) — this patient has non-palpable thyroid`,
+
+        comparisonTable: {
+          title: "Hyperthyroidism vs Hypothyroidism: Clinical and Laboratory Features",
+          headers: ["Feature", "Hyperthyroidism", "Hypothyroidism"],
+          rows: [
+            { "Feature": "**Metabolism**", "Hyperthyroidism": "↑ (weight loss, heat intolerance)", "Hypothyroidism": "↓ (weight gain, cold intolerance)" },
+            { "Feature": "**Heart Rate**", "Hyperthyroidism": "Tachycardia, palpitations, AF", "Hypothyroidism": "Bradycardia" },
+            { "Feature": "**GI**", "Hyperthyroidism": "Hyperdefecation, ↑ appetite", "Hypothyroidism": "Constipation" },
+            { "Feature": "**Neurologic**", "Hyperthyroidism": "Tremor, anxiety, hyperreflexia", "Hypothyroidism": "Delayed reflexes, lethargy, depression" },
+            { "Feature": "**Skin**", "Hyperthyroidism": "Warm, moist", "Hypothyroidism": "Cool, dry, pale" },
+            { "Feature": "**Eyes**", "Hyperthyroidism": "Lid lag, exophthalmos (Graves' only)", "Hypothyroidism": "Periorbital edema" },
+            { "Feature": "**Menstruation**", "Hyperthyroidism": "Oligomenorrhea (light, infrequent)", "Hypothyroidism": "Menorrhagia (heavy)" },
+            { "Feature": "**TSH**", "Hyperthyroidism": "↓↓ (<0.1 μU/mL)", "Hypothyroidism": "↑↑ (>10 μU/mL)" },
+            { "Feature": "**Free T4**", "Hyperthyroidism": "↑↑", "Hypothyroidism": "↓↓" },
+            { "Feature": "**Treatment**", "Hyperthyroidism": "Methimazole, beta-blockers, RAI", "Hypothyroidism": "Levothyroxine" },
+          ]
+        },
+
+        tags: ["endo:thyroid-disorders", "endo:graves-disease", "endo:hashimoto-thyroiditis"]
+      };
+    }
+
     case "gi":
     case "micro":
     case "pharm":
@@ -915,7 +1120,7 @@ Currently available systems with full depth:
 • Neurology (stroke, tPA)
 • Pulmonology (asthma exacerbation)
 
-Please select one of the complete systems above, or check back soon for ${system === "endo" ? "endocrinology (thyroid disorders, diabetes complications)" : system === "gi" ? "gastroenterology (GI bleeding, IBD, hepatology)" : system === "micro" ? "microbiology (sepsis, meningitis, opportunistic infections)" : system === "pharm" ? "pharmacology (adverse drug reactions, drug interactions)" : system === "genetics" ? "genetics (chromosomal disorders, inheritance patterns)" : system === "obgyn" ? "OB/GYN (preeclampsia, ectopic pregnancy, STIs)" : system === "psych" ? "psychiatry (major depression, schizophrenia, substance abuse)" : system === "peds" ? "pediatrics (congenital disorders, developmental milestones)" : system} cases!`,
+Please select one of the complete systems above, or check back soon for ${system === "gi" ? "gastroenterology (GI bleeding, IBD, hepatology)" : system === "micro" ? "microbiology (sepsis, meningitis, opportunistic infections)" : system === "pharm" ? "pharmacology (adverse drug reactions, drug interactions)" : system === "genetics" ? "genetics (chromosomal disorders, inheritance patterns)" : system === "obgyn" ? "OB/GYN (preeclampsia, ectopic pregnancy, STIs)" : system === "psych" ? "psychiatry (major depression, schizophrenia, substance abuse)" : system === "peds" ? "pediatrics (congenital disorders, developmental milestones)" : system} cases!`,
 
         labs: [
           { test: "System-specific labs", result: "Coming soon", referenceRange: "—" },
@@ -951,12 +1156,7 @@ Please select one of the complete systems above, or check back soon for ${system
 - **Clinical pearls** highlighting high-yield USMLE concepts
 
 **Example topics for ${system}:**
-${system === "endo" ? `
-- Thyroid disorders (hyperthyroid vs hypothyroid, thyroid storm, myxedema coma)
-- Diabetes complications (DKA covered in Renal section, HHS, neuropathy)
-- Adrenal disorders (Addison's, Cushing's, pheochromocytoma)
-- Pituitary disorders (SIADH, diabetes insipidus, prolactinoma)
-- Parathyroid disorders (primary hyperparathyroidism, hypocalcemia)` : system === "gi" ? `
+${system === "gi" ? `
 - GI bleeding (upper vs lower, variceal vs non-variceal)
 - Inflammatory bowel disease (Crohn's vs ulcerative colitis)
 - Acute abdomen (appendicitis, diverticulitis, bowel obstruction)
