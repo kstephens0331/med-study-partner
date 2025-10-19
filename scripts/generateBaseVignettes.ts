@@ -32,7 +32,12 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE || !TOGETHER_API_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 const SYSTEMS = [
   { id: 'heme', name: 'Hematology', topics: ['iron-deficiency', 'hemophilia', 'vwd', 'itp', 'thalassemia', 'sickle-cell', 'polycythemia', 'leukemia-acute', 'leukemia-chronic', 'lymphoma'] },

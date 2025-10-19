@@ -39,19 +39,20 @@ create index if not exists idx_base_vignettes_difficulty on base_vignettes(diffi
 create index if not exists idx_base_vignettes_system_difficulty on base_vignettes(system, difficulty);
 create index if not exists idx_base_vignettes_reviewed on base_vignettes(is_reviewed);
 
--- NO RLS - this table is public/shared across all users
-alter table base_vignettes disable row level security;
+-- Grant permissions to service_role and authenticated users
+grant all on base_vignettes to service_role;
+grant select on base_vignettes to authenticated;
+grant select on base_vignettes to anon;
 
--- Create public read-only policy (anyone can read, only admins can write)
+-- RLS: Public read, service role write
 alter table base_vignettes enable row level security;
 
+-- Anyone can read base vignettes
 create policy "Anyone can read base_vignettes" on base_vignettes
   for select using (true);
 
--- Only authenticated users with admin role can insert/update
--- (We'll do bulk inserts via service role client)
-create policy "Service role can manage base_vignettes" on base_vignettes
-  for all using (auth.role() = 'service_role');
+-- Service role can insert/update/delete (scripts will use service role key)
+-- No user-initiated writes allowed - this is read-only for students
 
 -- Updated_at trigger
 do $$ begin
