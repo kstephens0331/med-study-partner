@@ -653,38 +653,354 @@ ${onsetTime <= 270 ? `- If tPA is given, **aspirin is withheld for 24 hours.**
       };
     }
 
-    case "pulm":
+    case "pulm": {
+      const age = pick([28, 45, 62]);
+      const peakFlow = pick([150, 200, 280]);
+      const pCO2 = pick([32, 48, 58]);
+      const severity = peakFlow < 200 ? "severe" : pCO2 > 45 ? "life-threatening" : "moderate";
+
+      return {
+        prompt: `A ${age}-year-old ${pick(["man", "woman"])} with a history of asthma presents to the emergency department with acute onset of dyspnea, wheezing, and chest tightness that began 3 hours ago after exposure to cold air. The patient reports using an albuterol inhaler 8 times in the past 2 hours with minimal relief. Past medical history includes poorly controlled asthma (3 ED visits in the past year) and seasonal allergies. Medications include albuterol PRN and fluticasone inhaler (admits poor adherence). No recent upper respiratory infection.
+
+On physical examination, the patient is sitting upright, leaning forward, and speaking in 2-3 word sentences. Accessory muscle use is prominent with suprasternal and intercostal retractions. Lung auscultation reveals ${severity === "life-threatening" ? "decreased breath sounds bilaterally with minimal wheezing (\"silent chest\")" : "diffuse expiratory wheezing throughout all lung fields"}. No cyanosis. ${severity === "severe" ? "The patient appears anxious and fatigued." : ""}
+
+Which of the following is the most appropriate immediate next step in management?`,
+
+        labs: [
+          { test: "Peak Expiratory Flow", result: `${peakFlow} L/min`, referenceRange: "400–600 L/min (predicted for age/height)" },
+          { test: "SpO₂", result: severity === "life-threatening" ? "88% on room air" : "91% on room air", referenceRange: "≥95%" },
+          { test: "pH", result: severity === "life-threatening" ? "7.32" : pCO2 > 45 ? "7.36" : "7.42", referenceRange: "7.35–7.45" },
+          { test: "PaCO₂", result: `${pCO2} mmHg`, referenceRange: "35–45 mmHg" },
+          { test: "PaO₂", result: severity === "life-threatening" ? "62 mmHg" : "68 mmHg", referenceRange: "80–100 mmHg" },
+          { test: "WBC", result: "9,800/μL", referenceRange: "4,000–11,000/μL" },
+        ],
+
+        vitals: {
+          "BP": "135/85 mmHg",
+          "HR": severity === "life-threatening" ? "135 bpm" : "118 bpm",
+          "Temp": "98.4°F (36.9°C)",
+          "RR": severity === "life-threatening" ? "32/min (shallow)" : "28/min",
+          "O₂ Sat": severity === "life-threatening" ? "88% on room air" : "91% on room air"
+        },
+
+        choices: [
+          { label: "A", text: "Administer continuous albuterol nebulization, ipratropium, and systemic corticosteroids" },
+          { label: "B", text: "Intubate immediately due to impending respiratory failure" },
+          { label: "C", text: "Administer magnesium sulfate IV" },
+          { label: "D", text: "Give single dose of albuterol nebulizer and reassess in 1 hour" },
+          { label: "E", text: "Order chest X-ray to rule out pneumothorax before treatment" }
+        ],
+
+        correctAnswer: severity === "life-threatening" ? "B" : "A",
+
+        explanation: severity === "life-threatening"
+          ? `**Immediate intubation** is the correct answer for this **life-threatening asthma exacerbation**.
+
+**Why this is correct:**
+- **\"Silent chest\"** (absent breath sounds despite respiratory distress) indicates **severe bronchospasm** with minimal air movement → **imminent respiratory arrest**.
+- **Hypercapnia with acidosis** (PaCO₂ ${pCO2} mmHg, pH 7.32) signals **respiratory muscle fatigue** and inability to maintain ventilation.
+- **Altered mental status or extreme fatigue** is a **pre-arrest** sign in asthma.
+- **Severe hypoxemia** (SpO₂ 88%, PaO₂ 62 mmHg) despite supplemental oxygen.
+- **Tachycardia >130 bpm** indicates severe physiologic stress.
+
+**Asthma Severity Classification:**
+- **Mild-Moderate:** SpO₂ >90%, speaking full sentences, PEFR >40% predicted, normal PaCO₂.
+- **Severe:** SpO₂ <90%, speaking in words, PEFR <40% predicted, accessory muscle use.
+- **Life-Threatening:** Silent chest, PaCO₂ >45 mmHg (CO₂ retention), bradycardia, confusion, cyanosis.
+
+**Pathophysiology of Status Asthmaticus:**
+1. **Massive bronchoconstriction** → airway obstruction → ↑ work of breathing.
+2. **Respiratory muscle fatigue** → hypoventilation → **CO₂ retention** (PaCO₂ rises).
+3. **Normal or low PaCO₂ early** (hyperventilation compensates) → **rising PaCO₂ = decompensation**.
+4. **V/Q mismatch** → hypoxemia despite supplemental O₂.
+5. **Silent chest** = airways so constricted that minimal air moves → **no wheezing paradoxically worse than loud wheezing**.
+
+**Intubation Criteria in Asthma:**
+- PaCO₂ >50 mmHg with acidosis or rising trend
+- Silent chest with severe distress
+- Altered mental status (hypoxic encephalopathy)
+- Respiratory arrest or bradycardia
+- Failure to improve despite maximal medical therapy
+
+**Intubation Approach:**
+- **Rapid sequence intubation (RSI)** with **ketamine** (bronchodilator properties) and **rocuronium**.
+- **Avoid succinylcholine** (can cause hyperkalemia in asthma).
+- **Post-intubation:** Low tidal volumes (6 mL/kg), permissive hypercapnia, avoid auto-PEEP.
+
+**Medical therapy should still be given:**
+- Continuous albuterol + ipratropium nebulization
+- IV corticosteroids (methylprednisolone 125 mg)
+- Magnesium sulfate 2 g IV over 20 min
+- **But intubation takes priority** when patient is pre-arrest.
+
+---
+
+**Why the other answers are wrong:**
+
+**A. Albuterol, ipratropium, corticosteroids:**
+- This is **correct management for severe asthma**, but **NOT for life-threatening asthma with impending arrest**.
+- **Rising PaCO₂ (${pCO2} mmHg) + silent chest = intubation needed FIRST**.
+- Delaying intubation → cardiopulmonary arrest.
+
+**C. Magnesium sulfate:**
+- **Magnesium is adjunctive therapy** for severe asthma (bronchodilation via smooth muscle relaxation).
+- Dose: 2 g IV over 20 min.
+- **But does NOT replace intubation** when patient is in extremis.
+- Magnesium works in 15–30 minutes, but this patient needs **immediate airway control**.
+
+**D. Single albuterol dose and reassess:**
+- **Grossly inadequate** for life-threatening asthma.
+- This patient has **failed 8 albuterol treatments at home**.
+- **Severe asthma requires continuous nebulization** (albuterol 10–15 mg/hr).
+- Reassessing in 1 hour → likely cardiopulmonary arrest.
+
+**E. Chest X-ray first:**
+- **Imaging should NOT delay treatment** in acute severe asthma.
+- **Pneumothorax is rare** in asthma (~1–2% of severe exacerbations).
+- **Indications for CXR:** Subcutaneous emphysema, unilateral absent breath sounds, failure to respond to treatment.
+- **Treatment first, imaging later** unless strong suspicion for pneumothorax.`
+
+          : `**Continuous albuterol + ipratropium + systemic corticosteroids** is the correct answer.
+
+**Why this is correct:**
+- This patient has a **severe asthma exacerbation** based on:
+  - **Peak flow ${peakFlow} L/min** (~${Math.round((peakFlow / 500) * 100)}% of predicted) → <40% predicted = severe.
+  - **Speaking in 2-3 word sentences** (inability to speak full sentences).
+  - **Accessory muscle use** with retractions (increased work of breathing).
+  - **Tachypnea** (RR 28/min) and **tachycardia** (HR 118 bpm).
+  - **Hypoxemia** (SpO₂ 91%) requiring supplemental oxygen.
+  - **Failed outpatient management** (8 albuterol puffs with minimal relief).
+
+**Management of Severe Asthma Exacerbation:**
+1. **Oxygen:** Target SpO₂ ≥90% (this patient needs supplemental O₂).
+2. **Beta-2 agonist:** **Continuous albuterol nebulization** (10–15 mg/hr) until improvement, then q20min × 3.
+3. **Anticholinergic:** **Ipratropium bromide** 0.5 mg nebulized q20min × 3 (additive bronchodilation).
+4. **Systemic corticosteroids:** **Methylprednisolone 125 mg IV** or **prednisone 60 mg PO** (reduces inflammation, prevents relapse).
+5. **Reassess:** PEFR, vitals, clinical exam every 15–30 min.
+
+**Pathophysiology of Asthma Exacerbation:**
+1. **Trigger** (cold air, allergen, viral URI) → **mast cell degranulation** → histamine, leukotrienes.
+2. **Bronchospasm** (smooth muscle contraction) → **airway obstruction**.
+3. **Airway inflammation** (eosinophils, mucus plugging) → worsening obstruction.
+4. **Air trapping** → hyperinflation → ↑ work of breathing → respiratory muscle fatigue.
+5. **V/Q mismatch** → hypoxemia.
+
+**Why continuous nebulization?**
+- **Standard dosing** (2.5 mg albuterol q20min) may be **insufficient** for severe exacerbations.
+- **Continuous nebulization** delivers higher cumulative dose → faster improvement.
+- **No increased cardiac toxicity** compared to intermittent dosing.
+
+**Why ipratropium?**
+- **Synergistic** with albuterol (different mechanism: blocks acetylcholine-mediated bronchoconstriction).
+- **Improves FEV₁ by additional 20%** compared to albuterol alone.
+- **Reduces hospital admissions by 30%** in severe asthma.
+
+**Why systemic steroids?**
+- **Onset: 4–6 hours** (not immediate, but critical for preventing relapse).
+- **Reduces hospital admissions by 50%.**
+- **PO = IV** in efficacy (unless patient vomiting or unable to take PO).
+- **Continue for 5–7 days** (no taper needed for short courses).
+
+---
+
+**Why the other answers are wrong:**
+
+**B. Intubate immediately:**
+- **NOT indicated** for severe asthma **unless** signs of **impending respiratory failure**:
+  - **Silent chest** (absent breath sounds despite distress).
+  - **PaCO₂ >45–50 mmHg** (this patient has PaCO₂ ${pCO2} mmHg ${pCO2 > 45 ? "— borderline, but not yet intubation threshold" : "— normal, rules out intubation"}).
+  - **Altered mental status** (confusion, lethargy from hypoxia/hypercapnia).
+  - **Bradycardia or cardiopulmonary arrest.**
+- This patient is **alert**, **speaking in words**, and has **adequate air movement** (wheezing present).
+- **Intubation is a LAST RESORT** in asthma (high risk of complications: pneumothorax, auto-PEEP, death).
+
+**C. Magnesium sulfate:**
+- **Magnesium is adjunctive therapy**, not first-line.
+- **Indications:** Severe asthma **unresponsive to initial albuterol + ipratropium + steroids** (after 1 hour of treatment).
+- **Mechanism:** Smooth muscle relaxation via calcium channel antagonism.
+- **Dose:** 2 g IV over 20 min.
+- **Modest benefit:** Improves FEV₁ by ~10%, reduces admissions in severe asthma.
+- **Should NOT replace albuterol/ipratropium/steroids.**
+
+**D. Single albuterol dose:**
+- **Grossly inadequate** for severe asthma.
+- **Severe exacerbations require aggressive treatment:**
+  - Continuous or q20min nebulization (not single dose).
+  - Ipratropium added.
+  - Systemic steroids.
+- **This patient already failed 8 albuterol puffs at home** → single ED dose will not work.
+- **Reassess in 1 hour is too long** → patient will worsen (respiratory failure).
+
+**E. Chest X-ray first:**
+- **Do NOT delay treatment for imaging** in acute asthma.
+- **Indications for CXR:** Fever (r/o pneumonia), subcutaneous emphysema (r/o pneumothorax), unilateral findings, first asthma presentation, failure to respond to treatment.
+- **Pneumothorax is rare** in asthma (~1–2% of severe exacerbations).
+- **Bilateral wheezing makes pneumothorax unlikely.**
+- **Treatment first, imaging later.**`,
+
+        comparisonTable: {
+          title: "Asthma Exacerbation Severity Classification",
+          headers: ["Severity", "Symptoms", "PEFR", "SpO₂", "PaCO₂", "Treatment", "Disposition"],
+          rows: [
+            {
+              "Severity": "**Mild**",
+              "Symptoms": "Dyspnea with exertion, speaks full sentences",
+              "PEFR": ">70% predicted",
+              "SpO₂": ">95%",
+              "PaCO₂": "<40 mmHg (hyperventilation)",
+              "Treatment": "Albuterol q20min × 3, consider PO steroids",
+              "Disposition": "Discharge home"
+            },
+            {
+              "Severity": "**Moderate**",
+              "Symptoms": "Dyspnea at rest, speaks in phrases",
+              "PEFR": "40–69% predicted",
+              "SpO₂": "90–95%",
+              "PaCO₂": "<40 mmHg",
+              "Treatment": "Albuterol q20min, ipratropium, PO/IV steroids",
+              "Disposition": "Observe 1–4 hr, discharge if improved"
+            },
+            {
+              "Severity": "**Severe**",
+              "Symptoms": "Speaks in words, accessory muscles, retractions",
+              "PEFR": "<40% predicted",
+              "SpO₂": "<90%",
+              "PaCO₂": "<40 mmHg (normal = bad sign)",
+              "Treatment": "Continuous albuterol, ipratropium, IV steroids ± Mg",
+              "Disposition": "Admit to hospital"
+            },
+            {
+              "Severity": "**Life-Threatening**",
+              "Symptoms": "Silent chest, confusion, cyanosis, bradycardia",
+              "PEFR": "Unable to perform",
+              "SpO₂": "<88%",
+              "PaCO₂": ">45 mmHg (respiratory failure)",
+              "Treatment": "**Intubation**, ICU-level bronchodilators",
+              "Disposition": "ICU admission"
+            },
+          ]
+        },
+
+        tags: ["pulm:asthma-exacerbation", "pulm:respiratory-failure", "pulm:bronchodilators"]
+      };
+    }
+
     case "endo":
     case "gi":
     case "micro":
     case "pharm":
-      // These systems will be completed with same USMLE depth in next iteration
+    case "genetics":
+    case "obgyn":
+    case "psych":
+    case "peds":
+      // These advanced systems are being developed with full USMLE depth
+      // Will be completed in the next iteration with same quality as heme/renal/cards/neuro/pulm
       return {
-        prompt: `Advanced ${system} vignette in USMLE format coming soon. This system requires deep clinical integration with labs, vitals tables, and comprehensive explanations.`,
+        prompt: `Advanced ${system} vignette in USMLE/UWorld format is under development.
+
+This will include:
+- Detailed 1-2 paragraph clinical presentation
+- Complete lab panels with reference ranges
+- Vital signs tables
+- Multiple choice A-E format
+- Comprehensive pathophysiology explanations
+- "Why each distractor is wrong" analysis
+- Comparison tables for differential diagnosis
+- Clinical management protocols
+
+Currently available systems with full depth:
+• Hematology (bleeding disorders)
+• Renal (DKA, acid-base)
+• Cardiology (ACS, STEMI management)
+• Neurology (stroke, tPA)
+• Pulmonology (asthma exacerbation)
+
+Please select one of the complete systems above, or check back soon for ${system === "endo" ? "endocrinology (thyroid disorders, diabetes complications)" : system === "gi" ? "gastroenterology (GI bleeding, IBD, hepatology)" : system === "micro" ? "microbiology (sepsis, meningitis, opportunistic infections)" : system === "pharm" ? "pharmacology (adverse drug reactions, drug interactions)" : system === "genetics" ? "genetics (chromosomal disorders, inheritance patterns)" : system === "obgyn" ? "OB/GYN (preeclampsia, ectopic pregnancy, STIs)" : system === "psych" ? "psychiatry (major depression, schizophrenia, substance abuse)" : system === "peds" ? "pediatrics (congenital disorders, developmental milestones)" : system} cases!`,
+
         labs: [
-          { test: "Pending", result: "—", referenceRange: "—" }
+          { test: "System-specific labs", result: "Coming soon", referenceRange: "—" },
+          { test: "Diagnostic studies", result: "Under development", referenceRange: "—" }
         ],
+
         vitals: {
-          "BP": "120/80 mmHg",
-          "HR": "80 bpm",
-          "Temp": "98.6°F",
-          "RR": "16/min"
+          "BP": "— mmHg",
+          "HR": "— bpm",
+          "Temp": "—°F",
+          "RR": "—/min",
+          "Status": "Full vignette in development"
         },
+
         choices: [
-          { label: "A", text: "Option A - Detailed answer pending" },
-          { label: "B", text: "Option B - Detailed answer pending" },
-          { label: "C", text: "Option C - Detailed answer pending" },
-          { label: "D", text: "Option D - Detailed answer pending" },
-          { label: "E", text: "Option E - Detailed answer pending" }
+          { label: "A", text: `${system.charAt(0).toUpperCase() + system.slice(1)} option A - detailed answer coming soon` },
+          { label: "B", text: `${system.charAt(0).toUpperCase() + system.slice(1)} option B - detailed answer coming soon` },
+          { label: "C", text: `${system.charAt(0).toUpperCase() + system.slice(1)} option C - detailed answer coming soon` },
+          { label: "D", text: `${system.charAt(0).toUpperCase() + system.slice(1)} option D - detailed answer coming soon` },
+          { label: "E", text: `${system.charAt(0).toUpperCase() + system.slice(1)} option E - detailed answer coming soon` }
         ],
+
         correctAnswer: "A",
-        explanation: `This ${system} vignette is being upgraded to full USMLE/UWorld depth with:\n- Detailed pathophysiology\n- Comparison tables\n- Why each distractor is wrong\n- Clinical integration`,
-        tags: [`${system}:advanced`]
+
+        explanation: `This ${system} vignette is being developed with the same comprehensive USMLE/UWorld depth as our completed systems.
+
+**What to expect:**
+- **Detailed pathophysiology** explaining mechanisms at the molecular/cellular level
+- **Clinical integration** connecting basic science to bedside management
+- **Differential diagnosis** with explicit reasoning for why each distractor is wrong
+- **Comparison tables** for side-by-side learning (e.g., Type 1 vs Type 2 DM complications)
+- **Management protocols** with step-by-step treatment algorithms
+- **Clinical pearls** highlighting high-yield USMLE concepts
+
+**Example topics for ${system}:**
+${system === "endo" ? `
+- Thyroid disorders (hyperthyroid vs hypothyroid, thyroid storm, myxedema coma)
+- Diabetes complications (DKA covered in Renal section, HHS, neuropathy)
+- Adrenal disorders (Addison's, Cushing's, pheochromocytoma)
+- Pituitary disorders (SIADH, diabetes insipidus, prolactinoma)
+- Parathyroid disorders (primary hyperparathyroidism, hypocalcemia)` : system === "gi" ? `
+- GI bleeding (upper vs lower, variceal vs non-variceal)
+- Inflammatory bowel disease (Crohn's vs ulcerative colitis)
+- Acute abdomen (appendicitis, diverticulitis, bowel obstruction)
+- Hepatology (cirrhosis, hepatic encephalopathy, SBP)
+- Pancreatitis (acute vs chronic, Ranson criteria)` : system === "micro" ? `
+- Sepsis and septic shock (SIRS criteria, Surviving Sepsis guidelines)
+- Meningitis (bacterial vs viral vs fungal, LP interpretation)
+- Pneumonia (CAP vs HAP vs aspiration, CURB-65)
+- Opportunistic infections (HIV/AIDS, transplant patients)
+- Antibiotic stewardship (empiric therapy, de-escalation)` : system === "pharm" ? `
+- Adverse drug reactions (QT prolongation, serotonin syndrome, NMS)
+- Drug interactions (CYP450 inducers/inhibitors)
+- Toxicology (acetaminophen, salicylate, opioid overdose)
+- Anticoagulation (warfarin management, DOAC reversal)
+- Chemotherapy complications (tumor lysis syndrome, neutropenic fever)` : system === "genetics" ? `
+- Chromosomal disorders (Down syndrome, Turner, Klinefelter)
+- Single-gene disorders (cystic fibrosis, sickle cell, hemophilia)
+- Inheritance patterns (autosomal dominant/recessive, X-linked)
+- Cancer genetics (BRCA, Lynch syndrome, FAP)
+- Pharmacogenomics (warfarin dosing, TPMT variants)` : system === "obgyn" ? `
+- Hypertensive disorders of pregnancy (preeclampsia, eclampsia, HELLP)
+- Ectopic pregnancy (risk factors, diagnosis, management)
+- Sexually transmitted infections (PID, cervicitis, syphilis)
+- Abnormal uterine bleeding (PALM-COEIN classification)
+- Ovarian pathology (torsion, cysts, malignancy)` : system === "psych" ? `
+- Major depressive disorder (DSM-5 criteria, suicidality assessment)
+- Schizophrenia spectrum (positive/negative symptoms, antipsychotics)
+- Bipolar disorder (mania vs hypomania, mood stabilizers)
+- Anxiety disorders (GAD, panic disorder, OCD)
+- Substance use disorders (intoxication vs withdrawal syndromes)` : system === "peds" ? `
+- Congenital heart disease (VSD, ASD, TOF, coarctation)
+- Neonatal jaundice (physiologic vs pathologic, kernicterus)
+- Childhood infections (croup, epiglottitis, bronchiolitis)
+- Developmental milestones (gross motor, fine motor, language)
+- Child abuse (non-accidental trauma, mandated reporting)` : "Various high-yield topics"}
+
+Try generating a case from one of our **fully developed systems** (Hematology, Renal, Cardiology, Neurology, or Pulmonology) to see the level of detail!`,
+
+        tags: [`${system}:under-development`, `${system}:coming-soon`]
       };
 
     default:
       return {
-        prompt: "System case generation in progress. Please select from available systems: heme, renal, cards, neuro.",
+        prompt: "System case generation in progress. Please select from available systems: heme, renal, cards, neuro, pulm.",
         choices: [
           { label: "A", text: "Option A" },
           { label: "B", text: "Option B" },

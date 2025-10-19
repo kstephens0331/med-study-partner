@@ -4,15 +4,19 @@ import { useState } from "react";
 import { randomCase, type MicroCase } from "@/lib/ai/caseBank";
 
 const SYSTEMS = [
-  { id: "heme", label: "Hematology" },
-  { id: "renal", label: "Renal" },
-  { id: "cards", label: "Cardiology" },
-  { id: "pulm", label: "Pulmonology" },
-  { id: "neuro", label: "Neurology" },
-  { id: "endo", label: "Endocrinology" },
-  { id: "gi", label: "Gastroenterology" },
-  { id: "micro", label: "Microbiology" },
-  { id: "pharm", label: "Pharmacology" },
+  { id: "heme", label: "Hematology", complete: true },
+  { id: "renal", label: "Renal", complete: true },
+  { id: "cards", label: "Cardiology", complete: true },
+  { id: "neuro", label: "Neurology", complete: true },
+  { id: "pulm", label: "Pulmonology", complete: true },
+  { id: "endo", label: "Endocrinology", complete: false },
+  { id: "gi", label: "Gastroenterology", complete: false },
+  { id: "micro", label: "Microbiology", complete: false },
+  { id: "pharm", label: "Pharmacology", complete: false },
+  { id: "genetics", label: "Genetics", complete: false },
+  { id: "obgyn", label: "OB/GYN", complete: false },
+  { id: "psych", label: "Psychiatry", complete: false },
+  { id: "peds", label: "Pediatrics", complete: false },
 ];
 
 type VignetteWithAnswer = MicroCase & {
@@ -94,14 +98,21 @@ export default function VignetteBank() {
       {/* System Selector */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <div className="mb-3 text-sm font-medium text-zinc-300">Generate Case By System</div>
+        <div className="mb-3 text-xs text-zinc-500">
+          ✅ = Full USMLE depth available • 🚧 = Under development
+        </div>
         <div className="flex flex-wrap gap-2">
           {SYSTEMS.map((system) => (
             <button
               key={system.id}
               onClick={() => generateVignette(system.id)}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-zinc-200 hover:border-emerald-600 hover:bg-emerald-900/20 transition-colors whitespace-nowrap"
+              className={`rounded-lg border px-4 py-2.5 text-sm transition-colors whitespace-nowrap ${
+                system.complete
+                  ? "border-emerald-700 bg-emerald-900/20 text-emerald-200 hover:border-emerald-600 hover:bg-emerald-900/30"
+                  : "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-zinc-600 hover:bg-zinc-700"
+              }`}
             >
-              {system.label}
+              {system.complete ? "✅ " : "🚧 "}{system.label}
             </button>
           ))}
         </div>
