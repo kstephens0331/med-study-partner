@@ -29,20 +29,30 @@ create table if not exists generated_vignettes (
 );
 
 -- Indexes for performance
-create index idx_generated_vignettes_user on generated_vignettes(user_id);
-create index idx_generated_vignettes_user_block on generated_vignettes(user_id, block_id);
-create index idx_generated_vignettes_material on generated_vignettes(material_id);
-create index idx_generated_vignettes_lecture on generated_vignettes(lecture_id);
-create index idx_generated_vignettes_system on generated_vignettes(system);
-create index idx_generated_vignettes_difficulty on generated_vignettes(difficulty);
+create index if not exists idx_generated_vignettes_user on generated_vignettes(user_id);
+create index if not exists idx_generated_vignettes_user_block on generated_vignettes(user_id, block_id);
+create index if not exists idx_generated_vignettes_material on generated_vignettes(material_id);
+create index if not exists idx_generated_vignettes_lecture on generated_vignettes(lecture_id);
+create index if not exists idx_generated_vignettes_system on generated_vignettes(system);
+create index if not exists idx_generated_vignettes_difficulty on generated_vignettes(difficulty);
 
 -- Enable RLS
 alter table generated_vignettes enable row level security;
 
 -- RLS Policy
-create policy "Users can access own generated_vignettes" on generated_vignettes
-  for all using (auth.uid() = user_id);
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'generated_vignettes' and policyname = 'Users can access own generated_vignettes') then
+    create policy "Users can access own generated_vignettes" on generated_vignettes
+      for all using (auth.uid() = user_id);
+  end if;
+end $$;
 
--- Updated_at trigger
-create trigger update_generated_vignettes_updated_at before update on generated_vignettes
-  for each row execute function update_updated_at_column();
+-- Updated_at trigger (only if function exists)
+do $$ begin
+  if exists (select 1 from pg_proc where proname = 'update_updated_at_column') then
+    if not exists (select 1 from pg_trigger where tgname = 'update_generated_vignettes_updated_at') then
+      create trigger update_generated_vignettes_updated_at before update on generated_vignettes
+        for each row execute function update_updated_at_column();
+    end if;
+  end if;
+end $$;
