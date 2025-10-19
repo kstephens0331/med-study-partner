@@ -211,41 +211,53 @@ async function completeSystem(systemId: string) {
       const remaining = difficulty === 'easy' ? neededEasy : difficulty === 'moderate' ? neededModerate : neededHard;
       if (remaining - totalGenerated <= 0) continue;
 
-      const count = Math.min(
+      let count = Math.min(
         vignettePerTopic[difficulty],
         remaining - totalGenerated
       );
 
       if (count === 0) continue;
 
-      try {
-        const vignettes = await generateVignettesWithAI(systemId, topic, difficulty, count);
+      // Break large batches into smaller chunks to avoid JSON parsing errors
+      const MAX_BATCH_SIZE = 10;
 
-        if (vignettes.length > 0) {
-          const records = vignettes.map(v => ({
-            ...v,
-            system: systemId,
-            topic,
-            difficulty,
-            tags: [systemId, topic, difficulty]
-          }));
+      while (count > 0) {
+        const batchSize = Math.min(count, MAX_BATCH_SIZE);
 
-          const { error: insertError } = await supabase
-            .from('base_vignettes')
-            .insert(records);
+        try {
+          const vignettes = await generateVignettesWithAI(systemId, topic, difficulty, batchSize);
 
-          if (insertError) {
-            console.error(`      ❌ Insert error: ${insertError.message}`);
+          if (vignettes.length > 0) {
+            const records = vignettes.map(v => ({
+              ...v,
+              system: systemId,
+              topic,
+              difficulty,
+              tags: [systemId, topic, difficulty]
+            }));
+
+            const { error: insertError } = await supabase
+              .from('base_vignettes')
+              .insert(records);
+
+            if (insertError) {
+              console.error(`      ❌ Insert error: ${insertError.message}`);
+            } else {
+              console.log(`      ✅ Inserted ${vignettes.length} ${difficulty} vignettes`);
+              totalGenerated += vignettes.length;
+              count -= vignettes.length;
+            }
           } else {
-            console.log(`      ✅ Inserted ${vignettes.length} ${difficulty} vignettes`);
-            totalGenerated += vignettes.length;
+            // Failed to generate, skip this batch
+            count -= batchSize;
           }
-        }
 
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (err: any) {
-        console.error(`      ❌ Error: ${err.message}`);
+          // Rate limiting
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (err: any) {
+          console.error(`      ❌ Error: ${err.message}`);
+          count -= batchSize; // Skip failed batch and continue
+        }
       }
     }
   }
