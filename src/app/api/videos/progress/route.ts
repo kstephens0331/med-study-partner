@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
         last_watched_at: new Date().toISOString(),
         ...(is_completed && { completed_at: new Date().toISOString() })
       }, {
-        onConflict: 'user_id,video_segment_id',
-        returning: 'minimal'
+        onConflict: 'user_id,video_segment_id'
       })
       .select()
       .single();
