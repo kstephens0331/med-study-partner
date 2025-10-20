@@ -98,16 +98,15 @@ export default function VideoReview() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Video Review</h1>
-          <p className="text-gray-300">Segmented lectures broken into 5-7 minute chunks for focused study</p>
-        </div>
+    <div className="w-full">
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">Video Review</h2>
+        <p className="text-zinc-400">Segmented lectures broken into 5-7 minute chunks for focused study</p>
+      </div>
 
-        {/* Filters */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6">
+      {/* Filters */}
+      <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 mb-6">
           <h2 className="text-xl font-semibold text-white mb-4">Filters</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -183,8 +182,8 @@ export default function VideoReview() {
           </div>
         </div>
 
-        {/* Results */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+      {/* Results */}
+      <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-white">
               {filteredSegments.length} Video{filteredSegments.length !== 1 ? 's' : ''}
@@ -277,10 +276,10 @@ export default function VideoReview() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Video Player Modal (placeholder - will implement full player next) */}
+      {/* Video Player Modal (placeholder - will implement full player next) */}
         {selectedSegment && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-900 rounded-xl max-w-4xl w-full p-6">
