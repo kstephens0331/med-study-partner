@@ -325,7 +325,6 @@ export default function VideoReview() {
             </div>
           </div>
         )}
-      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabaseServer';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * Query params: system, topics, difficulty, keywords, limit, onlyCompleted, onlyIncomplete
  */
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
 
   // Check authentication
   const { data: { user } } = await supabase.auth.getUser();

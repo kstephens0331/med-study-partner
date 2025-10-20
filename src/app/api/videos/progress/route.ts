@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@/lib/supabaseServer';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * Body: { segment_id, position_seconds, is_completed }
  */
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
 
   // Check authentication
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
  * Query params: segment_id (optional)
  */
 export async function GET(req: NextRequest) {
-  const supabase = await createClient();
+  const supabase = await createServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
