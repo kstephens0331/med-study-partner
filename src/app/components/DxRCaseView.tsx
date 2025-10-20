@@ -180,15 +180,135 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {currentTab === "history" && (
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">History Taking</h2>
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">History Taking</h2>
             <p className="text-gray-600 mb-6">
-              Select the questions you want to ask the patient. The patient's responses will appear below each question.
+              Select questions to ask the patient. Patient responses will appear below. Questions are organized by category.
             </p>
-            {/* History interface will go here in Phase 3 */}
-            <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-              <p className="text-gray-500">History taking interface - Coming in Phase 3</p>
-              <p className="text-sm text-gray-400 mt-2">{caseData.history_items?.length || 0} questions available</p>
+
+            {/* Question Categories */}
+            <div className="space-y-6">
+              {['HPI', 'PMH', 'FH', 'SH', 'ROS'].map((category) => {
+                const categoryQuestions = caseData.history_items?.filter(
+                  (item) => item.category === category
+                ) || [];
+
+                if (categoryQuestions.length === 0) return null;
+
+                const selectedInCategory = selectedHistory.filter(
+                  (item) => item.category === category
+                );
+
+                return (
+                  <div key={category} className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* Category Header */}
+                    <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">
+                        {category === 'HPI' && '📋 History of Present Illness'}
+                        {category === 'PMH' && '🏥 Past Medical History'}
+                        {category === 'FH' && '👨‍👩‍👧‍👦 Family History'}
+                        {category === 'SH' && '🏠 Social History'}
+                        {category === 'ROS' && '🔍 Review of Systems'}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {selectedInCategory.length} of {categoryQuestions.length} questions asked
+                      </p>
+                    </div>
+
+                    {/* Question Selector */}
+                    <div className="p-4 bg-white">
+                      <select
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value=""
+                        onChange={(e) => {
+                          const question = categoryQuestions.find(
+                            (q) => q.question === e.target.value
+                          );
+                          if (question && !selectedHistory.find((h) => h.question === question.question)) {
+                            setSelectedHistory([...selectedHistory, question]);
+                          }
+                        }}
+                      >
+                        <option value="">-- Select a question to ask --</option>
+                        {categoryQuestions.map((item, idx) => (
+                          <option
+                            key={idx}
+                            value={item.question}
+                            disabled={selectedHistory.some((h) => h.question === item.question)}
+                          >
+                            {selectedHistory.some((h) => h.question === item.question)
+                              ? `✓ ${item.question}`
+                              : item.question}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Selected Questions & Responses */}
+                      {selectedInCategory.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {selectedInCategory.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className={`p-4 rounded-lg border-l-4 ${
+                                item.isKeyFinding
+                                  ? 'bg-yellow-50 border-yellow-500'
+                                  : 'bg-gray-50 border-gray-300'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <p className="font-medium text-gray-900 flex-1">
+                                  Q: {item.question}
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    setSelectedHistory(
+                                      selectedHistory.filter((h) => h.question !== item.question)
+                                    );
+                                  }}
+                                  className="ml-2 text-red-600 hover:text-red-800 text-sm"
+                                  title="Remove question"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                              <p className="text-gray-700 mt-2 pl-4 border-l-2 border-gray-300">
+                                <span className="font-medium text-blue-700">Patient:</span> {item.response}
+                              </p>
+                              {item.isKeyFinding && (
+                                <div className="mt-2 text-xs text-yellow-700 font-medium">
+                                  ⭐ Key finding
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">
+                    Total Questions Asked: {selectedHistory.length} / {caseData.history_items?.length || 0}
+                  </p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Key findings identified: {selectedHistory.filter((h) => h.isKeyFinding).length}
+                  </p>
+                </div>
+                {selectedHistory.length > 0 && (
+                  <button
+                    onClick={() => setSelectedHistory([])}
+                    className="px-4 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
