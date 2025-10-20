@@ -99,7 +99,7 @@ export default function WelcomeModal() {
       ),
     },
     {
-      title: "🏥 Vignettes & Getting Started",
+      title: "🏥 Clinical Practice",
       content: (
         <div className="space-y-3 text-zinc-300">
           <div className="rounded-lg bg-zinc-950/50 p-3">
@@ -107,8 +107,17 @@ export default function WelcomeModal() {
               <span>💉</span> Vignettes Tab
             </h4>
             <p className="text-sm">
-              Generate NBME/USMLE-style clinical cases on-demand. Practice across 9 medical systems
-              with randomized scenarios.
+              Generate NBME/USMLE-style clinical cases on-demand. Practice across 13 medical systems
+              with randomized scenarios for quick MCQ-style practice.
+            </p>
+          </div>
+          <div className="rounded-lg bg-zinc-950/50 p-3">
+            <h4 className="mb-2 flex items-center gap-2 font-medium text-emerald-400">
+              <span>🩺</span> Virtual Patients Tab
+            </h4>
+            <p className="text-sm">
+              Interactive DxR-style cases with full patient workups. Take history, perform exams,
+              order diagnostics, build differentials, and write SOAP notes with AI feedback.
             </p>
           </div>
           <div className="mt-4 rounded-lg border border-emerald-700 bg-emerald-900/20 p-3">
@@ -117,7 +126,7 @@ export default function WelcomeModal() {
               <li>Go to AI Coach tab and upload a lecture file (optional)</li>
               <li>Try Quick Mode - hold the button and ask a question</li>
               <li>Create some flashcards in the SRS tab</li>
-              <li>Generate clinical vignettes to practice</li>
+              <li>Practice with vignettes or virtual patient cases</li>
             </ol>
           </div>
         </div>

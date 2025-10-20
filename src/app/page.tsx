@@ -8,11 +8,13 @@ import SRSDeck from "./components/SRSDeck";
 import LectureViewer from "./components/LectureViewer";
 import VignetteBank from "./components/VignetteBank";
 import VideoReview from "./components/VideoReview";
+import DxRCaseBrowser from "./components/DxRCaseBrowser";
+import DxRCaseView from "./components/DxRCaseView";
 import WelcomeModal from "./components/WelcomeModal";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type InterjectStyle = "raise-hand" | "auto";
-type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos";
+type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos" | "dxr";
 
 export default function Home() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function Home() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("coach");
+  const [selectedDxRCase, setSelectedDxRCase] = useState<any>(null);
 
   // Quick mode
   const [listening, setListening] = useState(false);
@@ -436,6 +439,16 @@ export default function Home() {
           >
             Video Review
           </button>
+          <button
+            onClick={() => setActiveTab("dxr")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "dxr"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Virtual Patients
+          </button>
         </nav>
 
         {/* Tab Content */}
@@ -647,6 +660,24 @@ export default function Home() {
 
         {/* Video Review Tab */}
         {activeTab === "videos" && <VideoReview />}
+
+        {/* Virtual Patients (DxR) Tab */}
+        {activeTab === "dxr" && (
+          <>
+            {!selectedDxRCase ? (
+              <DxRCaseBrowser
+                onSelectCase={(caseData) => {
+                  setSelectedDxRCase(caseData);
+                }}
+              />
+            ) : (
+              <DxRCaseView
+                caseData={selectedDxRCase}
+                onExit={() => setSelectedDxRCase(null)}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {/* Welcome Modal - Shows on first visit */}
