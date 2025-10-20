@@ -21,19 +21,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, {
 });
 
 const SYSTEMS = [
-  { id: 'heme', name: 'Hematology', target: 350 },
-  { id: 'renal', name: 'Renal', target: 350 },
-  { id: 'cards', name: 'Cardiology', target: 350 },
-  { id: 'neuro', name: 'Neurology', target: 350 },
-  { id: 'pulm', name: 'Pulmonology', target: 350 },
-  { id: 'endo', name: 'Endocrinology', target: 350 },
-  { id: 'gi', name: 'Gastroenterology', target: 350 },
-  { id: 'micro', name: 'Microbiology', target: 350 },
-  { id: 'pharm', name: 'Pharmacology', target: 350 },
-  { id: 'genetics', name: 'Genetics', target: 350 },
-  { id: 'obgyn', name: 'OB/GYN', target: 350 },
-  { id: 'psych', name: 'Psychiatry', target: 350 },
-  { id: 'peds', name: 'Pediatrics', target: 350 }
+  { id: 'heme', name: 'Hematology', target: 500 },
+  { id: 'renal', name: 'Renal', target: 500 },
+  { id: 'cards', name: 'Cardiology', target: 500 },
+  { id: 'neuro', name: 'Neurology', target: 500 },
+  { id: 'pulm', name: 'Pulmonology', target: 500 },
+  { id: 'endo', name: 'Endocrinology', target: 500 },
+  { id: 'gi', name: 'Gastroenterology', target: 500 },
+  { id: 'micro', name: 'Microbiology', target: 500 },
+  { id: 'pharm', name: 'Pharmacology', target: 500 },
+  { id: 'genetics', name: 'Genetics', target: 500 },
+  { id: 'obgyn', name: 'OB/GYN', target: 500 },
+  { id: 'psych', name: 'Psychiatry', target: 500 },
+  { id: 'peds', name: 'Pediatrics', target: 500 }
 ];
 
 async function checkProgress() {
@@ -42,7 +42,7 @@ async function checkProgress() {
   console.log('='.repeat(80));
 
   let totalGenerated = 0;
-  const targetTotal = 4550;
+  const targetTotal = 6500;
 
   for (const system of SYSTEMS) {
     const { count, error } = await supabase
@@ -58,8 +58,9 @@ async function checkProgress() {
     const current = count || 0;
     totalGenerated += current;
     const progress = ((current / system.target) * 100).toFixed(1);
-    const bar = '█'.repeat(Math.floor(current / system.target * 40));
-    const empty = '░'.repeat(40 - bar.length);
+    const barLength = Math.min(40, Math.floor(current / system.target * 40));
+    const bar = '█'.repeat(Math.max(0, barLength));
+    const empty = '░'.repeat(Math.max(0, 40 - barLength));
 
     const status = current >= system.target ? '✅' : current > 0 ? '🔄' : '⏳';
 
