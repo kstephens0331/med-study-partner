@@ -64,20 +64,27 @@ export async function GET(req: NextRequest) {
   const segment_id = searchParams.get('segment_id');
 
   try {
-    let query = supabase
-      .from('video_watch_progress')
-      .select('*')
-      .eq('user_id', user.id);
-
     if (segment_id) {
-      query = query.eq('video_segment_id', segment_id).single();
+      // Single segment query
+      const { data, error } = await supabase
+        .from('video_watch_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('video_segment_id', segment_id)
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json({ progress: data });
+    } else {
+      // All segments query
+      const { data, error } = await supabase
+        .from('video_watch_progress')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return NextResponse.json({ progress: data });
     }
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return NextResponse.json({ progress: data });
   } catch (error: any) {
     console.error('Error fetching video progress:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
