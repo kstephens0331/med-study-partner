@@ -21,19 +21,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE, {
 });
 
 const SYSTEMS = [
-  { id: 'heme', name: 'Hematology', target: 350 },
-  { id: 'renal', name: 'Renal', target: 350 },
-  { id: 'cards', name: 'Cardiology', target: 350 },
-  { id: 'neuro', name: 'Neurology', target: 350 },
-  { id: 'pulm', name: 'Pulmonology', target: 350 },
-  { id: 'endo', name: 'Endocrinology', target: 350 },
-  { id: 'gi', name: 'Gastroenterology', target: 350 },
-  { id: 'micro', name: 'Microbiology', target: 350 },
-  { id: 'pharm', name: 'Pharmacology', target: 350 },
-  { id: 'genetics', name: 'Genetics', target: 350 },
-  { id: 'obgyn', name: 'OB/GYN', target: 350 },
-  { id: 'psych', name: 'Psychiatry', target: 350 },
-  { id: 'peds', name: 'Pediatrics', target: 350 }
+  { id: 'heme', name: 'Hematology', target: 500 },
+  { id: 'renal', name: 'Renal', target: 500 },
+  { id: 'cards', name: 'Cardiology', target: 500 },
+  { id: 'neuro', name: 'Neurology', target: 500 },
+  { id: 'pulm', name: 'Pulmonology', target: 500 },
+  { id: 'endo', name: 'Endocrinology', target: 500 },
+  { id: 'gi', name: 'Gastroenterology', target: 500 },
+  { id: 'micro', name: 'Microbiology', target: 500 },
+  { id: 'pharm', name: 'Pharmacology', target: 500 },
+  { id: 'genetics', name: 'Genetics', target: 500 },
+  { id: 'obgyn', name: 'OB/GYN', target: 500 },
+  { id: 'psych', name: 'Psychiatry', target: 500 },
+  { id: 'peds', name: 'Pediatrics', target: 500 }
 ];
 
 async function validate() {
