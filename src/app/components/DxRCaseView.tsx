@@ -314,15 +314,162 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
         )}
 
         {currentTab === "exam" && (
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Physical Examination</h2>
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Physical Examination</h2>
             <p className="text-gray-600 mb-6">
-              Select which examination components you want to perform. Findings will be revealed as you select them.
+              Select exam components to perform. Findings will be revealed as you check each item.
             </p>
-            {/* Exam interface will go here in Phase 4 */}
-            <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-              <p className="text-gray-500">Physical exam interface - Coming in Phase 4</p>
-              <p className="text-sm text-gray-400 mt-2">{caseData.physical_exam_findings?.length || 0} exam components available</p>
+
+            {/* Exam Systems */}
+            <div className="space-y-4">
+              {['General', 'Vital Signs', 'HEENT', 'Neck', 'Cardiovascular', 'Pulmonary', 'Abdomen', 'Musculoskeletal', 'Neurological', 'Skin', 'Extremities'].map((system) => {
+                const systemFindings = caseData.physical_exam_findings?.filter(
+                  (finding) => finding.system === system
+                ) || [];
+
+                if (systemFindings.length === 0) return null;
+
+                const selectedInSystem = selectedExam.filter(
+                  (finding) => finding.system === system
+                );
+
+                return (
+                  <div key={system} className="border border-gray-200 rounded-lg overflow-hidden">
+                    {/* System Header */}
+                    <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {system === 'General' && '👤 General Appearance'}
+                          {system === 'Vital Signs' && '❤️ Vital Signs'}
+                          {system === 'HEENT' && '👁️ HEENT'}
+                          {system === 'Neck' && '🦒 Neck'}
+                          {system === 'Cardiovascular' && '❤️ Cardiovascular'}
+                          {system === 'Pulmonary' && '🫁 Pulmonary'}
+                          {system === 'Abdomen' && '🫃 Abdomen'}
+                          {system === 'Musculoskeletal' && '🦴 Musculoskeletal'}
+                          {system === 'Neurological' && '🧠 Neurological'}
+                          {system === 'Skin' && '🩹 Skin'}
+                          {system === 'Extremities' && '🦵 Extremities'}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {selectedInSystem.length} of {systemFindings.length} components examined
+                        </p>
+                      </div>
+                      {systemFindings.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const allSelected = systemFindings.every((f) =>
+                              selectedExam.some((e) => e.finding === f.finding)
+                            );
+                            if (allSelected) {
+                              // Deselect all in this system
+                              setSelectedExam(
+                                selectedExam.filter((e) => e.system !== system)
+                              );
+                            } else {
+                              // Select all in this system
+                              const newFindings = systemFindings.filter(
+                                (f) => !selectedExam.some((e) => e.finding === f.finding)
+                              );
+                              setSelectedExam([...selectedExam, ...newFindings]);
+                            }
+                          }}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {systemFindings.every((f) =>
+                            selectedExam.some((e) => e.finding === f.finding)
+                          )
+                            ? 'Deselect All'
+                            : 'Select All'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Exam Checkboxes */}
+                    <div className="p-4 bg-white">
+                      <div className="space-y-2">
+                        {systemFindings.map((finding, idx) => {
+                          const isSelected = selectedExam.some(
+                            (e) => e.finding === finding.finding
+                          );
+
+                          return (
+                            <div key={idx}>
+                              <label className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedExam([...selectedExam, finding]);
+                                    } else {
+                                      setSelectedExam(
+                                        selectedExam.filter((f) => f.finding !== finding.finding)
+                                      );
+                                    }
+                                  }}
+                                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <div className="flex-1">
+                                  <span className="text-gray-900 font-medium">
+                                    Examine {system}
+                                  </span>
+                                  {isSelected && (
+                                    <div
+                                      className={`mt-2 p-3 rounded-lg border-l-4 ${
+                                        finding.isAbnormal
+                                          ? 'bg-red-50 border-red-500'
+                                          : 'bg-green-50 border-green-500'
+                                      }`}
+                                    >
+                                      <p className="text-sm text-gray-700">
+                                        <span className="font-medium">Finding:</span> {finding.finding}
+                                      </p>
+                                      {finding.isAbnormal && (
+                                        <div className="mt-1 text-xs text-red-700 font-medium">
+                                          ⚠️ Abnormal finding
+                                        </div>
+                                      )}
+                                      {finding.isKeyFinding && (
+                                        <div className="mt-1 text-xs text-yellow-700 font-medium">
+                                          ⭐ Key finding
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">
+                    Total Exam Components: {selectedExam.length} / {caseData.physical_exam_findings?.length || 0}
+                  </p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Abnormal findings: {selectedExam.filter((e) => e.isAbnormal).length} •
+                    Key findings: {selectedExam.filter((e) => e.isKeyFinding).length}
+                  </p>
+                </div>
+                {selectedExam.length > 0 && (
+                  <button
+                    onClick={() => setSelectedExam([])}
+                    className="px-4 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
