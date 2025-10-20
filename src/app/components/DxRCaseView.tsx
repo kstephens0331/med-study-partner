@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DxRCase, DxRCaseAttempt, HistoryItem, PhysicalExamFinding } from "@/types/dxr";
-import { createBrowserClient } from "@/lib/supabaseBrowser";
+import { createClient } from "@/lib/supabaseClient";
 
 interface DxRCaseViewProps {
   caseData: DxRCase;
@@ -28,7 +28,7 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
   const [soapAssessment, setSoapAssessment] = useState("");
   const [soapPlan, setSoapPlan] = useState("");
 
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     initializeAttempt();

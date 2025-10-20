@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DxRCase, DxRDifficulty, DxRFilterOptions } from "@/types/dxr";
-import { createBrowserClient } from "@/lib/supabaseBrowser";
+import { createClient } from "@/lib/supabaseClient";
 
 interface DxRCaseBrowserProps {
   onSelectCase: (caseData: DxRCase) => void;
@@ -14,7 +14,7 @@ export default function DxRCaseBrowser({ onSelectCase }: DxRCaseBrowserProps) {
   const [filters, setFilters] = useState<DxRFilterOptions>({});
   const [searchTerm, setSearchTerm] = useState("");
 
-  const supabase = createBrowserClient();
+  const supabase = createClient();
 
   useEffect(() => {
     fetchCases();
