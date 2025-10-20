@@ -7,11 +7,12 @@ import { createClient } from "@/lib/supabaseClient";
 import SRSDeck from "./components/SRSDeck";
 import LectureViewer from "./components/LectureViewer";
 import VignetteBank from "./components/VignetteBank";
+import VideoReview from "./components/VideoReview";
 import WelcomeModal from "./components/WelcomeModal";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type InterjectStyle = "raise-hand" | "auto";
-type TabType = "coach" | "srs" | "lectures" | "vignettes";
+type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos";
 
 export default function Home() {
   const router = useRouter();
@@ -425,6 +426,16 @@ export default function Home() {
           >
             Vignettes
           </button>
+          <button
+            onClick={() => setActiveTab("videos")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "videos"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Video Review
+          </button>
         </nav>
 
         {/* Tab Content */}
@@ -633,6 +644,9 @@ export default function Home() {
 
         {/* Vignettes Tab */}
         {activeTab === "vignettes" && <VignetteBank />}
+
+        {/* Video Review Tab */}
+        {activeTab === "videos" && <VideoReview />}
       </div>
 
       {/* Welcome Modal - Shows on first visit */}
