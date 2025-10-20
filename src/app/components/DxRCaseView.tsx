@@ -153,7 +153,7 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
             {caseData.patient_age}yo {caseData.patient_sex === "M" ? "Male" : caseData.patient_sex === "F" ? "Female" : "Other"}
             {" • "}
             <span className="font-medium">Setting:</span> {caseData.setting}
-          </p>
+          </div>
         </div>
       </div>
 
