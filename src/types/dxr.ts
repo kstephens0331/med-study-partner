@@ -251,3 +251,33 @@ export interface PatientCharacteristics {
   skin_tone?: string;
   notable_features?: string[];
 }
+
+// Image Generation Prompts (created by AI with case for 100% accuracy)
+export interface ImageGenerationPrompts {
+  patient_photo: string; // Stable Diffusion prompt for exact patient
+  visual_findings?: VisualFindingPrompt[];
+  radiology_prompts?: RadiologyPrompt[];
+  diagnostic_prompts?: DiagnosticPrompt[];
+}
+
+export interface VisualFindingPrompt {
+  finding_type: 'skin_finding' | 'eye_finding' | 'extremity_finding';
+  finding_name: string;
+  location: string;
+  sd_prompt: string; // Stable Diffusion prompt
+  requires_action: string; // e.g., "examine_skin"
+  is_key_finding: boolean;
+}
+
+export interface RadiologyPrompt {
+  study_name: string;
+  modality: string;
+  sd_prompt: string;
+  requires_action: string;
+}
+
+export interface DiagnosticPrompt {
+  test_name: string;
+  sd_prompt: string;
+  requires_action: string;
+}

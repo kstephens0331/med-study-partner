@@ -394,9 +394,46 @@ Return ONLY valid JSON in this exact format:
     "common_pitfalls": [
       "Pitfall 1: Common error students make",
       "Pitfall 2: Another mistake to avoid"
-    ]
+    ],
+
+    "image_generation_prompts": {
+      "patient_photo": "Detailed Stable Diffusion prompt for generating this exact patient's photo based on age, sex, ethnicity, build, and any visible features",
+      "visual_findings": [
+        {
+          "finding_type": "skin_finding",
+          "finding_name": "Jaundice",
+          "location": "sclera and skin",
+          "sd_prompt": "Professional medical close-up photograph showing yellowing of the sclera and skin (jaundice), clear detail, clinical photography",
+          "requires_action": "examine_skin",
+          "is_key_finding": true
+        }
+      ],
+      "radiology_prompts": [
+        {
+          "study_name": "Chest X-ray PA and Lateral",
+          "modality": "X-ray",
+          "sd_prompt": "Medical chest X-ray radiograph PA view showing [specific findings], professional radiology imaging, high contrast black and white",
+          "requires_action": "order_chest_xray"
+        }
+      ],
+      "diagnostic_prompts": [
+        {
+          "test_name": "12-lead EKG",
+          "sd_prompt": "Medical 12-lead EKG tracing showing [specific rhythm/findings], standard EKG grid paper, diagnostic quality",
+          "requires_action": "order_ekg"
+        }
+      ]
+    }
   }
 }
+
+CRITICAL INSTRUCTIONS FOR IMAGE PROMPTS:
+1. The patient_photo prompt MUST describe the EXACT patient (age, sex, build, ethnicity, any visible characteristics)
+2. For visual_findings, ONLY include findings that are actually VISIBLE (jaundice, cyanosis, rashes, edema, etc.)
+3. Each Stable Diffusion prompt must be EXTREMELY SPECIFIC about what the image should show
+4. Radiology prompts must describe the EXACT findings that would be seen on that imaging study
+5. Do NOT include findings that aren't visually apparent or relevant to this specific case
+6. Image prompts should be medically accurate and match the case diagnosis exactly
 `;
 
 async function generateCaseWithAI(difficulty: string, caseType: string, system?: string): Promise<any> {
