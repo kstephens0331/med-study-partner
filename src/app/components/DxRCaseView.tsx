@@ -25,6 +25,14 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
   const [orderedImaging, setOrderedImaging] = useState<any[]>([]);
   const [orderedProcedures, setOrderedProcedures] = useState<any[]>([]);
   const [differential, setDifferential] = useState<any[]>([]);
+  const [newDiagnosis, setNewDiagnosis] = useState<any>({
+    diagnosis: '',
+    rank: 0,
+    likelihood: 'Medium',
+    justification: '',
+    supporting_findings: [],
+    contradicting_findings: [],
+  });
   const [soapSubjective, setSoapSubjective] = useState("");
   const [soapObjective, setSoapObjective] = useState("");
   const [soapAssessment, setSoapAssessment] = useState("");
@@ -749,15 +757,306 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
         )}
 
         {currentTab === "differential" && (
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Differential Diagnosis</h2>
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Differential Diagnosis</h2>
             <p className="text-gray-600 mb-6">
-              Build your differential diagnosis by ranking the most likely diagnoses with supporting evidence.
+              Build and rank your differential diagnosis. Add diagnoses with supporting and contradicting evidence.
             </p>
-            {/* Differential interface will go here in Phase 6 */}
-            <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-              <p className="text-gray-500">Differential diagnosis builder - Coming in Phase 6</p>
+
+            {/* Add New Diagnosis */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-3">Add Diagnosis</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Diagnosis Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Acute Myocardial Infarction"
+                    value={newDiagnosis.diagnosis}
+                    onChange={(e) =>
+                      setNewDiagnosis({ ...newDiagnosis, diagnosis: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Likelihood
+                  </label>
+                  <select
+                    value={newDiagnosis.likelihood}
+                    onChange={(e) =>
+                      setNewDiagnosis({ ...newDiagnosis, likelihood: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Justification *
+                  </label>
+                  <textarea
+                    placeholder="Explain why this diagnosis is on your differential..."
+                    value={newDiagnosis.justification}
+                    onChange={(e) =>
+                      setNewDiagnosis({ ...newDiagnosis, justification: e.target.value })
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Supporting Findings
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter finding and press Enter"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                          setNewDiagnosis({
+                            ...newDiagnosis,
+                            supporting_findings: [
+                              ...(newDiagnosis.supporting_findings || []),
+                              e.currentTarget.value.trim(),
+                            ],
+                          });
+                          e.currentTarget.value = '';
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    {newDiagnosis.supporting_findings && newDiagnosis.supporting_findings.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {newDiagnosis.supporting_findings.map((finding, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-sm bg-green-50 px-2 py-1 rounded"
+                          >
+                            <span className="text-green-700">✓ {finding}</span>
+                            <button
+                              onClick={() => {
+                                setNewDiagnosis({
+                                  ...newDiagnosis,
+                                  supporting_findings: newDiagnosis.supporting_findings?.filter(
+                                    (_, i) => i !== idx
+                                  ),
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contradicting Findings
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter finding and press Enter"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                          setNewDiagnosis({
+                            ...newDiagnosis,
+                            contradicting_findings: [
+                              ...(newDiagnosis.contradicting_findings || []),
+                              e.currentTarget.value.trim(),
+                            ],
+                          });
+                          e.currentTarget.value = '';
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                    {newDiagnosis.contradicting_findings && newDiagnosis.contradicting_findings.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {newDiagnosis.contradicting_findings.map((finding, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between text-sm bg-red-50 px-2 py-1 rounded"
+                          >
+                            <span className="text-red-700">✗ {finding}</span>
+                            <button
+                              onClick={() => {
+                                setNewDiagnosis({
+                                  ...newDiagnosis,
+                                  contradicting_findings: newDiagnosis.contradicting_findings?.filter(
+                                    (_, i) => i !== idx
+                                  ),
+                                });
+                              }}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (newDiagnosis.diagnosis.trim() && newDiagnosis.justification.trim()) {
+                      const newDx = {
+                        ...newDiagnosis,
+                        rank: differential.length + 1,
+                      };
+                      setDifferential([...differential, newDx]);
+                      setNewDiagnosis({
+                        diagnosis: '',
+                        rank: 0,
+                        likelihood: 'Medium',
+                        justification: '',
+                        supporting_findings: [],
+                        contradicting_findings: [],
+                      });
+                    }
+                  }}
+                  disabled={!newDiagnosis.diagnosis.trim() || !newDiagnosis.justification.trim()}
+                  className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                >
+                  Add to Differential
+                </button>
+              </div>
             </div>
+
+            {/* Differential List */}
+            {differential.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">
+                    Your Differential ({differential.length} diagnoses)
+                  </h3>
+                  <button
+                    onClick={() => setDifferential([])}
+                    className="text-sm text-red-600 hover:text-red-800"
+                  >
+                    Clear All
+                  </button>
+                </div>
+                {differential.map((dx, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div className="flex flex-col space-y-1">
+                            <button
+                              onClick={() => {
+                                if (idx > 0) {
+                                  const newDiff = [...differential];
+                                  [newDiff[idx - 1], newDiff[idx]] = [newDiff[idx], newDiff[idx - 1]];
+                                  newDiff.forEach((d, i) => (d.rank = i + 1));
+                                  setDifferential(newDiff);
+                                }
+                              }}
+                              disabled={idx === 0}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                              title="Move up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (idx < differential.length - 1) {
+                                  const newDiff = [...differential];
+                                  [newDiff[idx], newDiff[idx + 1]] = [newDiff[idx + 1], newDiff[idx]];
+                                  newDiff.forEach((d, i) => (d.rank = i + 1));
+                                  setDifferential(newDiff);
+                                }
+                              }}
+                              disabled={idx === differential.length - 1}
+                              className="text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                              title="Move down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-2xl font-bold text-gray-400">#{dx.rank}</span>
+                              <h4 className="text-lg font-semibold text-gray-900">{dx.diagnosis}</h4>
+                              <span
+                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  dx.likelihood === 'High'
+                                    ? 'bg-red-100 text-red-700'
+                                    : dx.likelihood === 'Medium'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-green-100 text-green-700'
+                                }`}
+                              >
+                                {dx.likelihood}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 mt-2">{dx.justification}</p>
+                            {dx.supporting_findings && dx.supporting_findings.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-medium text-gray-600">Supporting:</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {dx.supporting_findings.map((f, fidx) => (
+                                    <span
+                                      key={fidx}
+                                      className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded"
+                                    >
+                                      ✓ {f}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {dx.contradicting_findings && dx.contradicting_findings.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs font-medium text-gray-600">Against:</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {dx.contradicting_findings.map((f, fidx) => (
+                                    <span
+                                      key={fidx}
+                                      className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded"
+                                    >
+                                      ✗ {f}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newDiff = differential.filter((_, i) => i !== idx);
+                            newDiff.forEach((d, i) => (d.rank = i + 1));
+                            setDifferential(newDiff);
+                          }}
+                          className="ml-4 text-red-600 hover:text-red-800"
+                          title="Remove"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                <p className="text-gray-500">No diagnoses added yet. Add your first diagnosis above.</p>
+              </div>
+            )}
           </div>
         )}
 
