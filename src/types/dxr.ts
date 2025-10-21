@@ -213,3 +213,41 @@ export interface DxRFilterOptions {
   emergencyOnly?: boolean;
   notAttempted?: boolean;
 }
+
+// Visual Media Types
+export type MediaType =
+  | 'patient_photo'
+  | 'skin_finding'
+  | 'eye_finding'
+  | 'extremity_finding'
+  | 'xray'
+  | 'ct_scan'
+  | 'mri'
+  | 'ultrasound'
+  | 'ekg'
+  | 'microscopy'
+  | 'other';
+
+export interface DxRMedia {
+  id: string;
+  case_id: string;
+  media_type: MediaType;
+  file_url: string;
+  thumbnail_url?: string;
+  title: string;
+  description?: string;
+  findings?: string;
+  associated_finding_id?: string;
+  requires_action?: string; // e.g., "examine_skin", "order_chest_xray"
+  display_order: number;
+  ai_generated: boolean;
+  generation_prompt?: string;
+  created_at: string;
+}
+
+export interface PatientCharacteristics {
+  build?: 'thin' | 'average' | 'overweight' | 'obese';
+  hair_color?: string;
+  skin_tone?: string;
+  notable_features?: string[];
+}
