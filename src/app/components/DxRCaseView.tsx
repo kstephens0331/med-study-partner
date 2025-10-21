@@ -1061,14 +1061,183 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
         )}
 
         {currentTab === "soap" && (
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">SOAP Note</h2>
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">SOAP Note</h2>
             <p className="text-gray-600 mb-6">
-              Document your clinical encounter using the SOAP format (Subjective, Objective, Assessment, Plan).
+              Document your clinical encounter using the SOAP format. This will be evaluated by AI.
             </p>
-            {/* SOAP interface will go here in Phase 7 */}
-            <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-              <p className="text-gray-500">SOAP note editor - Coming in Phase 7</p>
+
+            {/* SOAP Note Sections */}
+            <div className="space-y-6">
+              {/* Subjective */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-blue-100 px-4 py-3 border-b border-blue-200">
+                  <h3 className="font-semibold text-blue-900">
+                    📋 Subjective
+                  </h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Chief complaint, HPI, past medical/family/social history, ROS
+                  </p>
+                </div>
+                <div className="p-4 bg-white">
+                  <textarea
+                    value={soapSubjective}
+                    onChange={(e) => setSoapSubjective(e.target.value)}
+                    placeholder="Document the patient's history in your own words. Include:
+- Chief complaint
+- History of present illness (onset, location, duration, character, aggravating/alleviating factors, radiation, timing, severity)
+- Past medical history
+- Medications
+- Allergies
+- Family history
+- Social history
+- Review of systems (pertinent positives and negatives)"
+                    rows={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  />
+                  <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                    <span>{soapSubjective.length} characters</span>
+                    <span>{selectedHistory.length} history items gathered</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Objective */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-green-100 px-4 py-3 border-b border-green-200">
+                  <h3 className="font-semibold text-green-900">
+                    🩺 Objective
+                  </h3>
+                  <p className="text-sm text-green-700 mt-1">
+                    Vital signs, physical examination findings, diagnostic test results
+                  </p>
+                </div>
+                <div className="p-4 bg-white">
+                  <textarea
+                    value={soapObjective}
+                    onChange={(e) => setSoapObjective(e.target.value)}
+                    placeholder="Document objective findings including:
+- Vital signs (BP, HR, RR, Temp, SpO2, weight, BMI)
+- Physical examination findings by system (General, HEENT, Neck, Cardiovascular, Pulmonary, Abdomen, Extremities, Neurological, Skin)
+- Laboratory results
+- Imaging findings
+- Other diagnostic test results
+
+Be specific and use proper medical terminology."
+                    rows={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-mono text-sm"
+                  />
+                  <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                    <span>{soapObjective.length} characters</span>
+                    <span>
+                      {selectedExam.length} exam components • {orderedLabs.length} labs • {orderedImaging.length} imaging
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Assessment */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-yellow-100 px-4 py-3 border-b border-yellow-200">
+                  <h3 className="font-semibold text-yellow-900">
+                    🧠 Assessment
+                  </h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    Your diagnostic impression and differential diagnosis
+                  </p>
+                </div>
+                <div className="p-4 bg-white">
+                  <textarea
+                    value={soapAssessment}
+                    onChange={(e) => setSoapAssessment(e.target.value)}
+                    placeholder="Document your clinical assessment including:
+- Primary diagnosis with supporting evidence
+- Differential diagnoses ranked by likelihood
+- Clinical reasoning for each diagnosis
+- Severity/acuity assessment
+- Pertinent positives and negatives
+- Integration of history, physical exam, and test results
+
+Example format:
+1. [Primary Diagnosis] - Most likely given [supporting evidence]. Against this: [contradicting evidence].
+2. [Second diagnosis] - Consider due to [rationale].
+3. [Third diagnosis] - Less likely but cannot exclude because [reasoning]."
+                    rows={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-mono text-sm"
+                  />
+                  <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                    <span>{soapAssessment.length} characters</span>
+                    <span>{differential.length} diagnoses in differential</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Plan */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-purple-100 px-4 py-3 border-b border-purple-200">
+                  <h3 className="font-semibold text-purple-900">
+                    📝 Plan
+                  </h3>
+                  <p className="text-sm text-purple-700 mt-1">
+                    Diagnostic workup, treatment, follow-up, patient education
+                  </p>
+                </div>
+                <div className="p-4 bg-white">
+                  <textarea
+                    value={soapPlan}
+                    onChange={(e) => setSoapPlan(e.target.value)}
+                    placeholder="Document your management plan including:
+- Further diagnostic testing needed
+- Therapeutic interventions (medications, procedures)
+- Consultations/referrals
+- Patient education and counseling
+- Follow-up arrangements
+- Return precautions
+
+Be specific with:
+- Medication names, doses, routes, frequencies
+- Timing of follow-up
+- Specific education points
+- Red flag symptoms to watch for"
+                    rows={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                  />
+                  <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                    <span>{soapPlan.length} characters</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Helper Stats */}
+            <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <h4 className="font-semibold text-gray-900 mb-3">SOAP Note Completion</h4>
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div>
+                  <div className="text-gray-600">Subjective</div>
+                  <div className={`font-semibold ${soapSubjective.length > 100 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {soapSubjective.length > 100 ? '✓ Complete' : 'Incomplete'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Objective</div>
+                  <div className={`font-semibold ${soapObjective.length > 100 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {soapObjective.length > 100 ? '✓ Complete' : 'Incomplete'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Assessment</div>
+                  <div className={`font-semibold ${soapAssessment.length > 100 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {soapAssessment.length > 100 ? '✓ Complete' : 'Incomplete'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-600">Plan</div>
+                  <div className={`font-semibold ${soapPlan.length > 100 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {soapPlan.length > 100 ? '✓ Complete' : 'Incomplete'}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
