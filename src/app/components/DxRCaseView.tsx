@@ -10,9 +10,11 @@ interface DxRCaseViewProps {
 }
 
 type TabView = "history" | "exam" | "diagnostics" | "differential" | "soap" | "submit";
+type DiagnosticTabView = "labs" | "imaging" | "procedures";
 
 export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
   const [currentTab, setCurrentTab] = useState<TabView>("history");
+  const [diagnosticTab, setDiagnosticTab] = useState<DiagnosticTabView>("labs");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [timeStarted, setTimeStarted] = useState<Date>(new Date());
 
@@ -475,17 +477,273 @@ export default function DxRCaseView({ caseData, onExit }: DxRCaseViewProps) {
         )}
 
         {currentTab === "diagnostics" && (
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Diagnostic Workup</h2>
+          <div className="p-6 max-w-5xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Diagnostic Workup</h2>
             <p className="text-gray-600 mb-6">
-              Order laboratory tests, imaging studies, and procedures. Results will be displayed as they become available.
+              Order laboratory tests, imaging studies, and procedures. Results will be displayed immediately.
             </p>
-            {/* Diagnostics interface will go here in Phase 5 */}
-            <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-              <p className="text-gray-500">Diagnostic workup interface - Coming in Phase 5</p>
-              <p className="text-sm text-gray-400 mt-2">
-                {caseData.available_labs?.length || 0} labs • {caseData.available_imaging?.length || 0} imaging • {caseData.available_procedures?.length || 0} procedures
-              </p>
+
+            {/* Diagnostic Tabs */}
+            <div className="border-b border-gray-200 mb-6">
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setDiagnosticTab('labs')}
+                  className={`px-4 py-2 text-sm font-medium transition ${
+                    diagnosticTab === 'labs'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  🔬 Laboratory Tests ({caseData.available_labs?.length || 0})
+                </button>
+                <button
+                  onClick={() => setDiagnosticTab('imaging')}
+                  className={`px-4 py-2 text-sm font-medium transition ${
+                    diagnosticTab === 'imaging'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📸 Imaging Studies ({caseData.available_imaging?.length || 0})
+                </button>
+                <button
+                  onClick={() => setDiagnosticTab('procedures')}
+                  className={`px-4 py-2 text-sm font-medium transition ${
+                    diagnosticTab === 'procedures'
+                      ? 'border-b-2 border-blue-600 text-blue-600'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  💉 Procedures ({caseData.available_procedures?.length || 0})
+                </button>
+              </div>
+            </div>
+
+            {/* Laboratory Tests */}
+            {diagnosticTab === 'labs' && (
+              <div className="space-y-4">
+                {caseData.available_labs && caseData.available_labs.length > 0 ? (
+                  caseData.available_labs.map((lab, idx) => {
+                    const isOrdered = orderedLabs.some((l) => l.name === lab.name);
+                    return (
+                      <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="p-4 bg-white">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{lab.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Category: {lab.category} • Cost: ${lab.cost} • Turnaround: {lab.turnaround_time}
+                              </p>
+                              {lab.clinical_indication && (
+                                <p className="text-sm text-gray-500 mt-1 italic">
+                                  {lab.clinical_indication}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (isOrdered) {
+                                  setOrderedLabs(orderedLabs.filter((l) => l.name !== lab.name));
+                                } else {
+                                  setOrderedLabs([...orderedLabs, lab]);
+                                }
+                              }}
+                              className={`ml-4 px-4 py-2 text-sm font-medium rounded-lg transition ${
+                                isOrdered
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              {isOrdered ? 'Cancel' : 'Order'}
+                            </button>
+                          </div>
+
+                          {/* Results */}
+                          {isOrdered && lab.results && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                              <h5 className="font-medium text-gray-900 mb-2">Results:</h5>
+                              <div className="space-y-1">
+                                {lab.results.map((result, ridx) => (
+                                  <div
+                                    key={ridx}
+                                    className={`text-sm flex items-center justify-between ${
+                                      result.isAbnormal ? 'text-red-700 font-medium' : 'text-gray-700'
+                                    }`}
+                                  >
+                                    <span>{result.test}:</span>
+                                    <span>
+                                      {result.value} {result.unit} {result.isAbnormal && '⚠️'}
+                                      <span className="text-gray-500 ml-2 text-xs">
+                                        (Ref: {result.referenceRange})
+                                      </span>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No laboratory tests available for this case.</p>
+                )}
+              </div>
+            )}
+
+            {/* Imaging Studies */}
+            {diagnosticTab === 'imaging' && (
+              <div className="space-y-4">
+                {caseData.available_imaging && caseData.available_imaging.length > 0 ? (
+                  caseData.available_imaging.map((imaging, idx) => {
+                    const isOrdered = orderedImaging.some((i) => i.name === imaging.name);
+                    return (
+                      <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="p-4 bg-white">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{imaging.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {imaging.modality} • {imaging.body_part} • Cost: ${imaging.cost} • {imaging.turnaround_time}
+                              </p>
+                              {imaging.radiation && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  ☢️ Radiation: {imaging.radiation_dose || 'Yes'}
+                                </p>
+                              )}
+                              {imaging.clinical_indication && (
+                                <p className="text-sm text-gray-500 mt-1 italic">
+                                  {imaging.clinical_indication}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (isOrdered) {
+                                  setOrderedImaging(orderedImaging.filter((i) => i.name !== imaging.name));
+                                } else {
+                                  setOrderedImaging([...orderedImaging, imaging]);
+                                }
+                              }}
+                              className={`ml-4 px-4 py-2 text-sm font-medium rounded-lg transition ${
+                                isOrdered
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              {isOrdered ? 'Cancel' : 'Order'}
+                            </button>
+                          </div>
+
+                          {/* Results */}
+                          {isOrdered && imaging.findings && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                              <h5 className="font-medium text-gray-900 mb-2">Findings:</h5>
+                              <p className="text-sm text-gray-700 mb-2">{imaging.findings}</p>
+                              {imaging.impression && (
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <p className="font-medium text-sm text-gray-900">Impression:</p>
+                                  <p className="text-sm text-gray-700">{imaging.impression}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No imaging studies available for this case.</p>
+                )}
+              </div>
+            )}
+
+            {/* Procedures */}
+            {diagnosticTab === 'procedures' && (
+              <div className="space-y-4">
+                {caseData.available_procedures && caseData.available_procedures.length > 0 ? (
+                  caseData.available_procedures.map((procedure, idx) => {
+                    const isOrdered = orderedProcedures.some((p) => p.name === procedure.name);
+                    return (
+                      <div key={idx} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="p-4 bg-white">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900">{procedure.name}</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {procedure.category} • Cost: ${procedure.cost} • {procedure.turnaround_time}
+                              </p>
+                              {procedure.risks && (
+                                <p className="text-xs text-red-600 mt-1">
+                                  ⚠️ Risks: {procedure.risks}
+                                </p>
+                              )}
+                              {procedure.contraindications && (
+                                <p className="text-xs text-orange-600 mt-1">
+                                  🚫 Contraindications: {procedure.contraindications}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                if (isOrdered) {
+                                  setOrderedProcedures(orderedProcedures.filter((p) => p.name !== procedure.name));
+                                } else {
+                                  setOrderedProcedures([...orderedProcedures, procedure]);
+                                }
+                              }}
+                              className={`ml-4 px-4 py-2 text-sm font-medium rounded-lg transition ${
+                                isOrdered
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                              }`}
+                            >
+                              {isOrdered ? 'Cancel' : 'Order'}
+                            </button>
+                          </div>
+
+                          {/* Results */}
+                          {isOrdered && procedure.findings && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                              <h5 className="font-medium text-gray-900 mb-2">Findings:</h5>
+                              <p className="text-sm text-gray-700">{procedure.findings}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-center text-gray-500 py-8">No procedures available for this case.</p>
+                )}
+              </div>
+            )}
+
+            {/* Summary Stats */}
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-900">
+                    Total Ordered: {orderedLabs.length + orderedImaging.length + orderedProcedures.length}
+                  </p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Labs: {orderedLabs.length} • Imaging: {orderedImaging.length} • Procedures: {orderedProcedures.length}
+                  </p>
+                </div>
+                {(orderedLabs.length > 0 || orderedImaging.length > 0 || orderedProcedures.length > 0) && (
+                  <button
+                    onClick={() => {
+                      setOrderedLabs([]);
+                      setOrderedImaging([]);
+                      setOrderedProcedures([]);
+                    }}
+                    className="px-4 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
