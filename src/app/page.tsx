@@ -12,10 +12,12 @@ import DxRCaseBrowser from "./components/DxRCaseBrowser";
 import DxRCaseView from "./components/DxRCaseView";
 import LearningTools from "./components/LearningTools";
 import WelcomeModal from "./components/WelcomeModal";
+import SkillDashboard from "./components/SkillDashboard";
+import ChallengeModes from "./components/ChallengeModes";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type InterjectStyle = "raise-hand" | "auto";
-type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos" | "dxr" | "learning";
+type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos" | "dxr" | "learning" | "skills" | "challenges";
 
 export default function Home() {
   const router = useRouter();
@@ -24,6 +26,9 @@ export default function Home() {
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("coach");
   const [selectedDxRCase, setSelectedDxRCase] = useState<any>(null);
+
+  // User state
+  const [user, setUser] = useState<any>(null);
 
   // Quick mode
   const [listening, setListening] = useState(false);
@@ -95,6 +100,15 @@ export default function Home() {
   // Preload skills on mount
   useEffect(() => {
     preloadSkills();
+  }, []);
+
+  // Fetch user on mount
+  useEffect(() => {
+    async function getUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    }
+    getUser();
   }, []);
 
   // Init recognizer (on mount / when lectureOn changes)
@@ -460,6 +474,26 @@ export default function Home() {
           >
             Learning Tools
           </button>
+          <button
+            onClick={() => setActiveTab("skills")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "skills"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Skills & Progress
+          </button>
+          <button
+            onClick={() => setActiveTab("challenges")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "challenges"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Challenges
+          </button>
         </nav>
 
         {/* Tab Content */}
@@ -692,6 +726,20 @@ export default function Home() {
 
         {/* Learning Tools Tab */}
         {activeTab === "learning" && <LearningTools />}
+
+        {/* Skills & Progress Tab */}
+        {activeTab === "skills" && user && <SkillDashboard userId={user.id} />}
+
+        {/* Challenges Tab */}
+        {activeTab === "challenges" && user && (
+          <ChallengeModes
+            userId={user.id}
+            onComplete={(xp, badgeId) => {
+              console.log(`Challenge complete! Earned ${xp} XP${badgeId ? ` and badge: ${badgeId}` : ''}`);
+              // Optionally: show a toast notification or refresh skill dashboard
+            }}
+          />
+        )}
       </div>
 
       {/* Welcome Modal - Shows on first visit */}
