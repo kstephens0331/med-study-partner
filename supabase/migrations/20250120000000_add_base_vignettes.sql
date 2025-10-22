@@ -48,8 +48,17 @@ grant select on base_vignettes to anon;
 alter table base_vignettes enable row level security;
 
 -- Anyone can read base vignettes
-create policy "Anyone can read base_vignettes" on base_vignettes
-  for select using (true);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where tablename = 'base_vignettes'
+    and policyname = 'Anyone can read base_vignettes'
+  ) then
+    create policy "Anyone can read base_vignettes" on base_vignettes
+      for select using (true);
+  end if;
+end $$;
 
 -- Service role can insert/update/delete (scripts will use service role key)
 -- No user-initiated writes allowed - this is read-only for students

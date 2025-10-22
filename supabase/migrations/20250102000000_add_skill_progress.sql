@@ -17,13 +17,30 @@ create table if not exists skill_progress (
 alter table skill_progress enable row level security;
 
 -- RLS Policy
-create policy "Users can access own skill_progress" on skill_progress
-  for all using (auth.uid() = user_id);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where tablename = 'skill_progress'
+    and policyname = 'Users can access own skill_progress'
+  ) then
+    create policy "Users can access own skill_progress" on skill_progress
+      for all using (auth.uid() = user_id);
+  end if;
+end $$;
 
 -- Index for performance
-create index idx_skill_progress_user_tag on skill_progress(user_id, topic_tag);
-create index idx_skill_progress_user on skill_progress(user_id);
+create index if not exists idx_skill_progress_user_tag on skill_progress(user_id, topic_tag);
+create index if not exists idx_skill_progress_user on skill_progress(user_id);
 
 -- Updated_at trigger (function already exists from initial schema)
-create trigger update_skill_progress_updated_at before update on skill_progress
-  for each row execute function update_updated_at_column();
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger
+    where tgname = 'update_skill_progress_updated_at'
+  ) then
+    create trigger update_skill_progress_updated_at before update on skill_progress
+      for each row execute function update_updated_at_column();
+  end if;
+end $$;
