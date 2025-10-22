@@ -41,6 +41,14 @@ const DIFFICULTY_DISTRIBUTION = {
   expert: 150         // 10% - Rare, complex, or multi-system
 };
 
+// Case number ranges by difficulty (allows 1000 cases per level)
+const CASE_NUMBER_RANGES = {
+  beginner: { start: 1000, end: 1999 },      // 1xxx series
+  intermediate: { start: 2000, end: 2999 },  // 2xxx series
+  advanced: { start: 3000, end: 3999 },      // 3xxx series
+  expert: { start: 4000, end: 4999 }         // 4xxx series
+};
+
 const CASE_TYPES = [
   // Common PCP presentations (60%)
   { type: 'common', specialties: ['primary-care', 'family-medicine'], count: 900 },
@@ -482,7 +490,10 @@ async function generateCaseWithAI(difficulty: string, caseType: string, system?:
 async function generateCases(difficulty: string, count: number) {
   console.log(`\n📚 Generating ${count} ${difficulty} DxR cases...`);
 
-  // Check existing count
+  // Get case number range for this difficulty
+  const range = CASE_NUMBER_RANGES[difficulty as keyof typeof CASE_NUMBER_RANGES];
+
+  // Check existing count for this difficulty
   const { count: existingCount } = await supabase
     .from('dxr_cases')
     .select('*', { count: 'exact', head: true })
@@ -493,6 +504,7 @@ async function generateCases(difficulty: string, count: number) {
   const needed = Math.max(0, target - current);
 
   console.log(`\n📊 Current: ${current}/${target}`);
+  console.log(`📋 Case number range: ${range.start}-${range.end}`);
 
   if (needed === 0) {
     console.log(`✅ ${difficulty} cases already complete!\n`);
@@ -508,7 +520,8 @@ async function generateCases(difficulty: string, count: number) {
     const batch = Math.min(batchSize, Math.min(count, needed) - i);
 
     for (let j = 0; j < batch; j++) {
-      const caseNum = current + totalGenerated + 1;
+      // Calculate case number within the difficulty's range
+      const caseNum = range.start + current + totalGenerated;
 
       // Determine case type based on difficulty
       let caseType = 'intermediate';

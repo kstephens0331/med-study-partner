@@ -10,11 +10,12 @@ import VignetteBank from "./components/VignetteBank";
 import VideoReview from "./components/VideoReview";
 import DxRCaseBrowser from "./components/DxRCaseBrowser";
 import DxRCaseView from "./components/DxRCaseView";
+import LearningTools from "./components/LearningTools";
 import WelcomeModal from "./components/WelcomeModal";
 
 type Msg = { role: "user" | "assistant"; content: string };
 type InterjectStyle = "raise-hand" | "auto";
-type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos" | "dxr";
+type TabType = "coach" | "srs" | "lectures" | "vignettes" | "videos" | "dxr" | "learning";
 
 export default function Home() {
   const router = useRouter();
@@ -449,6 +450,16 @@ export default function Home() {
           >
             Virtual Patients
           </button>
+          <button
+            onClick={() => setActiveTab("learning")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === "learning"
+                ? "bg-emerald-600 text-white"
+                : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            }`}
+          >
+            Learning Tools
+          </button>
         </nav>
 
         {/* Tab Content */}
@@ -678,6 +689,9 @@ export default function Home() {
             )}
           </>
         )}
+
+        {/* Learning Tools Tab */}
+        {activeTab === "learning" && <LearningTools />}
       </div>
 
       {/* Welcome Modal - Shows on first visit */}
